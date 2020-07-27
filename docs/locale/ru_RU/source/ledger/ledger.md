@@ -1,72 +1,66 @@
-# Ledger
+# Реестр
 
-**Audience**: Architects, Application and smart contract developers,
-administrators
+**Для кого это**: Архитекторы, разработчики приложений и смарт-контрактов,
+администраторы
 
-A **ledger** is a key concept in Hyperledger Fabric; it stores important factual
-information about business objects; both the current value of the attributes of
-the objects, and the history of transactions that resulted in these current
-values.
+**Реестр** это ключевая концепция в Hyperledger Fabric; в нем хранится важная фактическая 
+информация про бизнес-объектах; как текущее состояние аттрбутов объекта, так и историю всех 
+транзакций, которые на них повлияли.
 
-In this topic, we're going to cover:
+В этом разделе мы поговорим о:
 
-* [What is a Ledger?](#what-is-a-ledger)
-* [Storing facts about business objects](#ledgers-facts-and-states)
-* [A blockchain ledger](#the-ledger)
-* [The world state](#world-state)
-* [The blockchain data structure](#blockchain)
-* [How blocks are stored in a blockchain](#blocks)
-* [Transactions](#transactions)
-* [World state database options](#world-state-database-options)
-* [The **Fabcar** example ledger](#example-ledger-fabcar)
-* [Ledgers and namespaces](#namespaces)
-* [Ledgers and channels](#channels)
+* [Что такое реестр?](#what-is-a-ledger)
+* [Хранение фактов о бизнес-объектах](#ledgers-facts-and-states)
+* [Блокчейн-реестр](#the-ledger)
+* [World state](#world-state)
+* [Структура данных блокчейна](#blockchain)
+* [Как хранятся блоки в блокчейне](#blocks)
+* [Транзакции](#transactions)
+* [Опции базы данных world state](#world-state-database-options)
+* [Пример реестра **Fabcar**](#example-ledger-fabcar)
+* [Реестры и пространства имен](#namespaces)
+* [Реестры и каналы](#channels)
 
-## What is a Ledger?
+## Что такое Реестр?
 
-A ledger contains the current state of a business as a journal of transactions.
-The earliest European and Chinese ledgers date from almost 1000 years ago, and
-the Sumerians had [stone
-ledgers](http://www.sciencephoto.com/media/686227/view/accounting-ledger-sumerian-cuneiform)
-4000 years ago -- but let's start with a more up-to-date example!
+Реестр содержит текущее состояние бизнеса как журнал транзакций. Первые Европейские и Китайские 
+реестры существуют уже 1000 лет, а Шумеры имели [каменные реестры]
+(http://www.sciencephoto.com/media/686227/view/accounting-ledger-sumerian-cuneiform)
+более 4000 лет назад -- но давайте начнем с более современных примеров!
 
-You're probably used to looking at your bank account. What's most important to
-you is the available balance -- it's what you're able to spend at the current
-moment in time. If you want to see how your balance was derived, then you can
-look through the transaction credits and debits that determined it. This is a
-real life example of a ledger -- a state (your bank balance), and a set of
-ordered transactions (credits and debits) that determine it. Hyperledger Fabric
-is motivated by these same two concerns -- to present the current value of a set
-of ledger states, and to capture the history of the transactions that determined
-these states.
+Вы, наверное, уже привыкли смотреть на свой банковский счет. Самым важным для вас, наверняка, 
+является балланс --- то, что вы можете потратить в данный момент времени. Если вы хотите 
+увидеть, откуда взялось это значение балланса, то вы можете просмотреть предыдущие транзакции 
+кредитов и дебетов. Это пример реестра из реальной жизни --- состояние (текущий балланс) и 
+последовательность транзакций (кредиты и дебеты), которые поясняют его значение. Hyperledger 
+Fabric также руководствуется этими двумя соображениями --- представить текущее значение набора 
+сотстояний реестра, а также отобразить историю транзакций, которые привели к этим состояниям.
 
-## Ledgers, Facts, and States
+## Реестр, факты и состояния
 
-A ledger doesn't literally store business objects -- instead it stores **facts**
-about those objects. When we say "we store a business object in a ledger" what
-we really mean is that we're recording the facts about the current state of an
-object, and the facts about the history of transactions that led to the current
-state. In an increasingly digital world, it can feel like we're looking at an
-object, rather than facts about an object. In the case of a digital object, it's
-likely that it lives in an external datastore; the facts we store in the ledger
-allow us to identify its location along with other key information about it.
+Реестр не буквально хранит бизнес-объекты --- на самом деле, он храник **факты** об этих 
+объектах. Когда мы говорим "мы храним бизнес-объект в реестре", мы имеем в виду лишь то, что мы 
+записываем факты о текущем состоянии оъекта и факты об истории транзакций, предшествующих этому 
+состоянию. В развивающемся цифровом мире можно почувствовать, что мы действительно имеем дело с 
+объектом, а не с фактами о нем. В случае цифрового объекта, он скорее всего находится во внешней 
+хранилище данных; факты, записываемые в реестр, позволяют нам идентифицировать его 
+метонахождение, а также дают ключевую информацию о нем.
 
-While the facts about the current state of a business object may change, the
-history of facts about it is **immutable**, it can be added to, but it cannot be
-retrospectively changed. We're going to see how thinking of a blockchain as an
-immutable history of facts about business objects is a simple yet powerful way
-to understand it.
+В отличие от текущего состояния бизнес-объекта, которое может меняться со временем, история 
+фактов о нем **неизменна**, в нее можно добавить что-нибудь, но после добавления, изменить его 
+нельзя. Сейчас мы увидим, что представлять блокчейн, как неизменяемую историю фактов о бизнес-
+объектах, это простой, но действенный ключ к его пониманию.
 
-Let's now take a closer look at the Hyperledger Fabric ledger structure!
+Давайте теперь присмотримся к структуре Hyperledger Fabric! 
 
+## Реестр
 
-## The Ledger
+В Hyperledger Fabric реестр состоит из двух отдельных, но связанных частей --- world state и 
+блокчейн. Каждая из них представляет набор фактов о наборе бизнес-объектов.
 
-In Hyperledger Fabric, a ledger consists of two distinct, though related, parts
--- a world state and a blockchain. Each of these represents a set of facts about
-a set of business objects.
+Первая часть --- **world state** --- база данных, содержащая **текущие значения** набора состояний реестра. 
 
-Firstly, there's a **world state** -- a database that holds **current values**
+Firstly, there's a  -- a database that holds **current values**
 of a set of ledger states. The world state makes it easy for a program to directly
 access the current value of a state rather than having to calculate it by traversing
 the entire transaction log. Ledger states are, by default, expressed as **key-value** pairs,
