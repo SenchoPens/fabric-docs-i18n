@@ -4,7 +4,7 @@
 администраторы
 
 **Реестр** это ключевая концепция в Hyperledger Fabric; в нем хранится важная фактическая 
-информация про бизнес-объекты; как текущее состояние их аттрбутов, так и история всех 
+информация про бизнес-объекты; как текущее состояние их атрибутов, так и история всех 
 транзакций, которые на них повлияли.
 
 В этом разделе мы поговорим о:
@@ -13,7 +13,7 @@
 * [Хранение фактов о бизнес-объектах](#ledgers-facts-and-states)
 * [Блокчейн-реестр](#the-ledger)
 * [World state](#world-state)
-* [Структура данных блокчейна](#blockchain)
+* [Структура данных блокчейн](#blockchain)
 * [Как хранятся блоки в блокчейне](#blocks)
 * [Транзакции](#transactions)
 * [Опции базы данных world state](#world-state-database-options)
@@ -91,7 +91,8 @@ World state содержит текущее значение атрибутов 
 числе его цену) --- вместо этого его можно напрямую получить из world state.
 
 ![ledger.worldstate](./ledger.diagram.3.png) *Реестр world state содержит
-два состояния. Первое: key=CAR1 и value=Audi. Второе состояние имеет более сложную структуру: key=CAR2 
+два состояния. Первое: key=CAR1 и value=Audi. Второе состояние имеет более сложную структуру: 
+key=CAR2 
 и value={model:BMW, color=red, owner=Jane}. Оба состояния 0 версии.*
 
 Состояние реестра содержит набор фактов об определенном бизнес-объекте. Наш пример показывает 
@@ -223,7 +224,8 @@ Genesis-блок --- точка отсчета реестра, хоть он и 
 рассмотрим структуру **данные блока** (blockdata), которая содержит транзакции блока.
 
 ![ledger.transaction](./ledger.diagram.5.png) *Детали транзакций. Транзакция
-T4 в данных блока D1 блока B1 состоит из заголовка транзакции, H4, подписи транзакции, S4, предложения транзакции P4, ответа транзакции, R4, и списка подтверждений, E4.*
+T4 в данных блока D1 блока B1 состоит из заголовка транзакции, H4, подписи транзакции, S4, 
+предложения транзакции P4, ответа транзакции, R4, и списка подтверждений, E4.*
 
 В примере, приведенном выше, можно видеть следующие поля:
 
@@ -252,14 +254,18 @@ T4 в данных блока D1 блока B1 состоит из заголо�
 * **Ответ**
 
   Этот раздел, проиллюстрированный R4, содержит значения world state до и после, как 
-  **Read Write set** (RW-set). Это результат работы смарт-контракта, и, если транзакция будет успешно 
+  **Read Write set** (RW-set). Это результат работы смарт-контракта, и, если транзакция будет 
+  успешно 
   подтверждена, она будет применена к реестру для обновления world state.
 
 
 * **Подтверждения**
 
   Как показывает E4, это список подписанных ответов на транзакции от всех требуемых для политики 
-  подтверждения организаций. Можно видеть, что хотя 
+  подтверждения организаций. Можно видеть, что хотя в транзакцию включен лишь один ответ на 
+  транзакцию, на самом деле подтверждений больше. Так получается, поскольку каждое подтверждение 
+  кодирует ответ на транзакцию определенной организации --- что означает ???
+  //ToDo
   As shown in E4, this is a list of signed transaction responses from each
   required organization sufficient to satisfy the endorsement policy. You'll
   notice that, whereas only one transaction response is included in the
@@ -268,98 +274,81 @@ T4 в данных блока D1 блока B1 состоит из заголо�
   meaning that there's no need to include any transaction response that doesn't
   match sufficient endorsements as it will be rejected as invalid, and not
   update the world state.
+Мы разобрали основные поля транзакции --- существуют другие, однако это основные, которые 
+необходимо было понять, чтобы иметь четкое представление о структуре данных реестра.
 
-That concludes the major fields of the transaction -- there are others, but
-these are the essential ones that you need to understand to have a solid
-understanding of the ledger data structure.
+## Параметры базы данных World State
 
-## World State database options
+World state реализовано в виде базы данных, что обеспечивает простое и эффективное хранение и 
+поиск состояний реестра. Как мы уже знаем, состояния реестра могут иметь простое и более сложно 
+структурированное значение, и из-за этого реализация базы данных world state может 
+варьироваться. Реализация world state может основываться как на LevelDB, так и на CouchDB.
 
-The world state is physically implemented as a database, to provide simple and
-efficient storage and retrieval of ledger states. As we've seen, ledger states
-can have simple or compound values, and to accommodate this, the world state
-database implementation can vary, allowing these values to be efficiently
-implemented. Options for the world state database currently include LevelDB and
-CouchDB.
+LevelDB, установленный по умолчанию, особенно удобен в случаях, когда состояние реестра это 
+простые пары ключ-значение. База данных расположена там же, где и узел пира --- она встроена в 
+тот же процесс операционной системы.
 
-LevelDB is the default and is particularly appropriate when ledger states are
-simple key-value pairs. A LevelDB database is co-located with the peer
-node -- it is embedded within the same operating system process.
+CouchDB --- правильный выбор, если состояния реестра структурированы в виде документов JSON, 
+поскольку CouchDB поддерживает сложные запросы и обновление сложных типов данных, которые часто 
+встречаются в транзакциях. Реализация CouchDB позволяет ему работать в отдельном процессе 
+операционной системы, но есть однозначное соответствие между пиром и экземпляром CouchDB. Смарт-
+контракты ничего этого не видят. Ознакомьтесь с [CouchDB в качестве StateDatabase]
+(../couchdb_as_state_database.html), если хотите узнать больше о Couch DB.
 
-CouchDB is a particularly appropriate choice when ledger states are structured
-as JSON documents because CouchDB supports the rich queries and update of richer
-data types often found in business transactions. Implementation-wise, CouchDB
-runs in a separate operating system process, but there is still a 1:1 relation
-between a peer node and a CouchDB instance. All of this is invisible to a smart
-contract. See [CouchDB as the StateDatabase](../couchdb_as_state_database.html)
-for more information on CouchDB.
+В LevelDB и CouchDB мы видим важное качество Hyperledger Fabric --- **изменяемость**. База 
+данных world state может быть хранилищем данных, хранилищем графов или временной базой данных. 
+Это обеспечивает гибкость типов состояний реестра и их доступность, что позволяет Hyperledger
+Fabric решать множество проблем самых разных типов.
 
-In LevelDB and CouchDB, we see an important aspect of Hyperledger Fabric -- it
-is *pluggable*. The world state database could be a relational data store, or a
-graph store, or a temporal database.  This provides great flexibility in the
-types of ledger states that can be efficiently accessed, allowing Hyperledger
-Fabric to address many different types of problems.
+## Пример реестра: fabcar
 
-## Example Ledger: fabcar
+Под конец раздела про реестр, давайте рассмотрим пример реестра. Запустив [пример реестра 
+fabcar](../write_first_app.html), вы создадите этот реестр.
 
-As we end this topic on the ledger, let's have a look at a sample ledger. If
-you've run the [fabcar sample application](../write_first_app.html), then you've
-created this ledger.
+Пример приложения fabcar создает набор из 10 уникальных машин; разного цвета, разного 
+производителя, разной модели и разного собственника. Вот так выглядит реестр после создания 
+первых четырех машин.
 
-The fabcar sample app creates a set of 10 cars each with a unique identity; a
-different color, make, model and owner. Here's what the ledger looks like after
-the first four cars have been created.
-
-![ledger.transaction](./ledger.diagram.6.png) *The ledger, L, comprises a world
-state, W and a blockchain, B. W contains four states with keys: CAR0, CAR1, CAR2
-and CAR3. B contains two blocks, 0 and 1. Block 1 contains four transactions:
+![ledger.transaction](./ledger.diagram.6.png) *Реестр, L, состоит из world
+state, W, и блокчейна, B. W содержит четыре состояния с ключами CAR0, CAR1, CAR2
+и CAR3. B содержит два блока, 0 и 1. Блок 1 содержит четыре транзакции:
 T1, T2, T3, T4.*
 
-We can see that the world state contains states that correspond to CAR0, CAR1,
-CAR2 and CAR3. CAR0 has a value which indicates that it is a blue Toyota Prius,
-currently owned by Tomoko, and we can see similar states and values for the
-other cars. Moreover, we can see that all car states are at version number 0,
-indicating that this is their starting version number -- they have not been
-updated since they were created.
+Можно видеть, что world state содержит состояния, соответствующие CAR0, CAR1,
+CAR2 и CAR3. Значение CAR0 дает понять, что это синяя Toyota Prius, в настоящее время 
+принадлежащая Tomoko. Такие же значения можно увидеть и у других машин. Более того, мы можем 
+видеть, что версия всех состояний машин --- 0, что показывает, что это их стартовый номер версии 
+--- их еще не обновляли после создания.
 
-We can also see that the blockchain contains two blocks.  Block 0 is the genesis
-block, though it does not contain any transactions that relate to cars. Block 1
-however, contains transactions T1, T2, T3, T4 and these correspond to
-transactions that created the initial states for CAR0 to CAR3 in the world
-state. We can see that block 1 is linked to block 0.
+Мы также видим, что блокчейн содержит два блока. Блок 0 --- genesis-блок --- не содержит 
+транзакций, касающихся машин. Блок 1, однако, содержит транзакции T1, T2, T3, T4, которые 
+соответствуют транзакциям, создавшим начальные состояния в world state машинам CAR0, CAR1,
+CAR2 и CAR3. Можно видеть, что блок 1 привязан к блоку 0.
 
-We have not shown the other fields in the blocks or transactions, specifically
-headers and hashes.  If you're interested in the precise details of these, you
-will find a dedicated reference topic elsewhere in the documentation. It gives
-you a fully worked example of an entire block with its transactions in glorious
-detail -- but for now, you have achieved a solid conceptual understanding of a
-Hyperledger Fabric ledger. Well done!
+Мы не показали оставшиеся поля блоков и транзакций, в частности заголовки и хэши. Если вас 
+интересуют детали, поищите в документации отдельную справочную тему, в которой есть полностью 
+проработанный детальный пример целого блока и его транзакций --- ну а пока вы достигли хорошего 
+понимания реестра Hyperledger Fabric. Молодцы!
 
 ## Пространства имен
 
-Хотя мы и говорили, что у реестра есть единственное world state и единственный блокчейн, это слегка упрощенное представление. На самом деле каждое звено цепи имеет собственное world state, отдельное от других звений. 
+Хотя мы и говорили, что у реестра есть единственное world state и единственный блокчейн, это 
+слегка упрощенное представление. На самом деле каждое звено цепи имеет собственное world state, 
+отдельное от других звений. World states расположены в пространстве имен так, что лишь смарт-
+контракты одного чейнкода имеют доступ к определенному пространству имен.
 
-Even though we have presented the ledger as though it were a single world state
-and single blockchain, that's a little bit of an over-simplification. In
-reality, each chaincode has its own world state that is separate from all other
-chaincodes. World states are in a namespace so that only smart contracts within
-the same chaincode can access a given namespace.
+Блокчейн содержит транзакции разных пространств имен смарт-контрактов. Больше про пространства 
+имен чейнкодов можно почитать [тут](../developapps/chaincodenamespace.html).
 
-A blockchain is not namespaced. It contains transactions from many different
-smart contract namespaces. You can read more about chaincode namespaces in this
-[topic](../developapps/chaincodenamespace.html).
-
-Let's now look at how the concept of a namespace is applied within a Hyperledger
-Fabric channel.
+Давайте посмотрим, как концепция пространства имен применяется в каналах Hyperledger
+Fabric.
 
 ## Каналы
 
 В Hyperledger Fabric, каждый [канал](../channels.html) имеет полностью отдельный реестр, 
-что означает полностью отдельный блокчейн и полностью отдельое world state, включая пространство имен. Приложения и смарт-контракты могут коммуницировать между каналами так, что информация реестров доступна 
-This means a completely separate blockchain, and completely
-separate world states, including namespaces. It is possible for applications and
-smart contracts to communicate between channels so that ledger information can
-be accessed between them.
+что означает полностью отдельный блокчейн и полностью отдельое world state, включая пространство 
+имен. Приложения и смарт-контракты могут общаться между каналами так, что информация реестров 
+передается между ними.
 
 Про работу реестра и каналов можно почитать поподробнее
 [здесь](../developapps/chaincodenamespace.html#channels).
@@ -367,11 +356,10 @@ be accessed between them.
 
 ## Больше информации
 
-See the [Transaction Flow](../txflow.html),
-[Read-Write set semantics](../readwrite.html) and
-[CouchDB as the StateDatabase](../couchdb_as_state_database.html) topics for a
-deeper dive on transaction flow, concurrency control, and the world state
-database.
+Ознакомьтесь с разделами [Транзакционный поток](../txflow.html),
+[Семанитка набора Read-Write](../readwrite.html) and
+[CouchDB в качестве StateDatabase](../couchdb_as_state_database.html), чтобы узнать больше о 
+транзакционном потоке, контроле согласованности и базе данных world state.
 
 <!--- Licensed under Creative Commons Attribution 4.0 International License
 https://creativecommons.org/licenses/by/4.0/ -->
