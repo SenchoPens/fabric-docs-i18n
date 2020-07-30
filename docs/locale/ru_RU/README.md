@@ -34,10 +34,10 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
 
 # Checklist
 
+- [x] Index
 - [x] Introduction (edited)
 - [ ] What’s new in Hyperledger Fabric v2.x
 - [ ] Release notes
-
 - [ ] Key Concepts
     - [x] Introduction (edited)
     - [ ] Hyperledger Fabric Model
@@ -52,7 +52,7 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
     - [ ] Fabric chaincode lifecycle
     - [ ] Private data
     - [ ] Channel capabilities
-    - [ ] Use Cases
+    - [x] Use Cases
 - [ ] Getting Started
 - [ ] Developing Applications
 - [ ] Tutorials
@@ -60,7 +60,7 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
 - [ ] Operations Guides
     - [x] Setting up an ordering node (edited)
     - [x] Membership Service Providers (MSP) (edited)
-    - [ ] Using a Hardware Security Module (HSM)
+    - [x] Using a Hardware Security Module (HSM)
     - [ ] Channel Configuration (configtx)
     - [ ] Endorsement policies
     - [ ] Pluggable transaction endorsement and validation
