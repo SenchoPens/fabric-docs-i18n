@@ -31,3 +31,58 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
 
 * Арсений Чеканов - senya@chekanov.net
 * Мария Марченко - maria.m.marchenko@mail.ru
+
+# Checklist
+
+- [x] Introduction (edited)
+- [ ] What’s new in Hyperledger Fabric v2.x
+- [ ] Release notes
+
+- [ ] Key Concepts
+    - [x] Introduction (edited)
+    - [ ] Hyperledger Fabric Model
+    - [ ] Blockchain network
+    - [x] Identity (edited)
+    - [ ] Membership Service Provider (MSP)
+    - [ ] Policies
+    - [ ] Peers
+    - [ ] Ledger
+    - [ ] The Ordering Service
+    - [ ] Smart Contracts and Chaincode
+    - [ ] Fabric chaincode lifecycle
+    - [ ] Private data
+    - [ ] Channel capabilities
+    - [ ] Use Cases
+- [ ] Getting Started
+- [ ] Developing Applications
+- [ ] Tutorials
+- [ ] Deploying a production network
+- [ ] Operations Guides
+    - [x] Setting up an ordering node (edited)
+    - [x] Membership Service Providers (MSP) (edited)
+    - [ ] Using a Hardware Security Module (HSM)
+    - [ ] Channel Configuration (configtx)
+    - [ ] Endorsement policies
+    - [ ] Pluggable transaction endorsement and validation
+    - [ ] Access Control Lists (ACL)
+    - [ ] MSP Implementation with Identity Mixer
+    - [ ] Identity Mixer MSP configuration generator (idemixgen)
+    - [ ] The Operations Service
+    - [ ] Metrics Reference
+    - [ ] External Builders and Launchers
+    - [ ] Chaincode as an external service
+    - [ ] Error handling
+    - [ ] Logging Control
+    - [ ] Securing Communication With Transport Layer Security (TLS)
+    - [ ] Configuring and operating a Raft ordering service
+    - [ ] Migrating from Kafka to Raft
+    - [ ] Bringing up a Kafka-based Ordering Service
+- [ ] Upgrading to the latest release
+- [ ] Commands Reference
+- [ ] Architecture Reference
+- [ ] Frequently Asked Questions
+- [ ] Contributions Welcome!
+- [ ] Glossary
+- [ ] Releases
+- [ ] Still Have Questions?
+- [ ] Status
