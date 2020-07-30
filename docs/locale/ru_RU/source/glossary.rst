@@ -1,10 +1,6 @@
-Glossary
+Словарь
 ===========================
-
-Terminology is important, so that all Hyperledger Fabric users and developers
-agree on what we mean by each specific term. What is a smart contract for
-example. The documentation will reference the glossary as needed, but feel free
-to read the entire thing in one sitting if you like; it's pretty enlightening!
+Терминология важна, поскольку именно благодаря ей пользователи и разработчики Hyperledger Fabric понимают, что мы подразумеваем, используя тот или иной термин. Например, что такое смарт-контракт. Документация ссылается на словарь, но можно прочитать его и просто так, это довольно познавательно!
 
 .. _Anchor-Peer:
 
@@ -61,7 +57,7 @@ on a per profile basis in the "Profiles" section.
 
 .. _Block:
 
-Block
+Блок
 -----
 
 .. figure:: ./glossary/glossary.block.png
@@ -70,14 +66,11 @@ Block
    :figwidth: 40 %
    :alt: A Block
 
-   Block B1 is linked to block B0. Block B2 is linked to block B1.
+   Блок B1 привязан к блоку B0. Блок B2 привязан к блоку B1.
 
 =======
 
-A block contains an ordered set of transactions. It is cryptographically linked
-to the preceding block, and in turn it is linked to be subsequent blocks. The
-first block in such a chain of blocks is called the **genesis block**. Blocks
-are created by the ordering service, and then validated and committed by peers.
+Блок содержит упорядоченный набор транзакций. Он криптографически привязан к предыдущему блоку, а также связан с последующими блоками. Первый блок в цепи блоков называется **genesis-блоком**. Блоки создаются ordering-службой, а потом валидируются и вносятся в реестр пирами.
 
 
 .. _Chain:
@@ -104,14 +97,14 @@ file system.
 
 .. _chaincode:
 
-Chaincode
+Чейнкод
 ---------
 
-See Smart-Contract_.
+См Smart-Contract_.
 
 .. _Channel:
 
-Channel
+Канал
 -------
 
 .. figure:: ./glossary/glossary.channel.png
@@ -120,16 +113,14 @@ Channel
    :figwidth: 40 %
    :alt: A Channel
 
-   Channel C connects application A1, peer P2 and ordering service O1.
+   Канал C объединяет приложение A1, пир P2 и ordering-службы O1.
 
 =======
 
-A channel is a private blockchain overlay which allows for data
-isolation and confidentiality. A channel-specific ledger is shared across the
-peers in the channel, and transacting parties must be authenticated to
-a channel in order to interact with it.  Channels are defined by a
-Configuration-Block_.
-
+Канал --- это приватный блокчейн-overlay (наложение на блокчейн), обеспечивающий изоляцию и 
+конфиденциальность. Реестр канала распространен между пирами канала, и стороны транзакций должны 
+быть аутентифицированы в канале для взаимодействий с ним. Каналы определяются Configuration-
+Block_.
 
 .. _Commit:
 

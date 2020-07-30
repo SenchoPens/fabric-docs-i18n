@@ -4,7 +4,7 @@
 администраторы
 
 **Реестр** это ключевая концепция в Hyperledger Fabric; в нем хранится важная фактическая 
-информация про бизнес-объектах; как текущее состояние аттрбутов объекта, так и историю всех 
+информация про бизнес-объекты; как текущее состояние их атрибутов, так и история всех 
 транзакций, которые на них повлияли.
 
 В этом разделе мы поговорим о:
@@ -13,7 +13,7 @@
 * [Хранение фактов о бизнес-объектах](#ledgers-facts-and-states)
 * [Блокчейн-реестр](#the-ledger)
 * [World state](#world-state)
-* [Структура данных блокчейна](#blockchain)
+* [Структура данных блокчейн](#blockchain)
 * [Как хранятся блоки в блокчейне](#blocks)
 * [Транзакции](#transactions)
 * [Опции базы данных world state](#world-state-database-options)
@@ -23,7 +23,7 @@
 
 ## Что такое Реестр?
 
-Реестр содержит текущее состояние бизнеса как журнал транзакций. Первые Европейские и Китайские 
+Реестр содержит текущее состояние бизнеса в виде журнала транзакций. Первые Европейские и Китайские 
 реестры существуют уже 1000 лет, а Шумеры имели [каменные реестры]
 (http://www.sciencephoto.com/media/686227/view/accounting-ledger-sumerian-cuneiform)
 более 4000 лет назад -- но давайте начнем с более современных примеров!
@@ -38,11 +38,11 @@ Fabric также руководствуется этими двумя сооб�
 
 ## Реестр, факты и состояния
 
-Реестр не буквально хранит бизнес-объекты --- на самом деле, он храник **факты** об этих 
-объектах. Когда мы говорим "мы храним бизнес-объект в реестре", мы имеем в виду лишь то, что мы 
+Реестр не буквально хранит бизнес-объекты --- на самом деле, он хранит **факты** об этих 
+объектах. Когда мы говорим "мы храним бизнес-объект в реестре", мы имеем в виду лишь то, что 
 записываем факты о текущем состоянии оъекта и факты об истории транзакций, предшествующих этому 
 состоянию. В развивающемся цифровом мире можно почувствовать, что мы действительно имеем дело с 
-объектом, а не с фактами о нем. В случае цифрового объекта, он скорее всего находится во внешней 
+объектом, а не с фактами о нем. В случае цифрового объекта, он скорее всего находится во внешнем 
 хранилище данных; факты, записываемые в реестр, позволяют нам идентифицировать его 
 метонахождение, а также дают ключевую информацию о нем.
 
@@ -56,234 +56,216 @@ Fabric также руководствуется этими двумя сооб�
 ## Реестр
 
 В Hyperledger Fabric реестр состоит из двух отдельных, но связанных частей --- world state и 
-блокчейн. Каждая из них представляет набор фактов о наборе бизнес-объектов.
+блокчейн. Каждая из них представляет собой набор фактов о наборе бизнес-объектов.
 
-Первая часть --- **world state** --- база данных, содержащая **текущие значения** набора состояний реестра. 
+Первая часть --- **world state** --- база данных, содержащая **текущие значения** набора 
+состояний реестра. World state предоставляет программе прямой доступ к текущему значению 
+состояния, позволяя не просчитывать его через весь журнал транзакций. Состояния реестра по 
+умолчанию хранятся в парах **ключ-значение**, и позже мы увидим, как Hyperledger Fabric 
+обеспечивает гибкость в этой области. World state может часто менятся, поскольку состояния 
+создааются, обновляются и удаляются.
 
-Firstly, there's a  -- a database that holds **current values**
-of a set of ledger states. The world state makes it easy for a program to directly
-access the current value of a state rather than having to calculate it by traversing
-the entire transaction log. Ledger states are, by default, expressed as **key-value** pairs,
-and we'll see later how Hyperledger Fabric provides flexibility in this regard.
-The world state can change frequently, as states can be created, updated and deleted.
+Вторая часть --- **блокчейн** --- транзакционный журнал, записывающий все изменения, влияющие на 
+на текущее world state. Транзакции собраны в блоки, которые добавляются в блокчейн --- что 
+позволяет понять историю изменений, повлиявшие на текущее world state. Структура данных блокчейн 
+сильно отличается от world state, поскольку после добавления нового блока, его уже нельзя 
+изменить или удалить; поэтому ее называют **неизменяемой**.
 
-Secondly, there's a **blockchain** -- a transaction log that records all the
-changes that have resulted in the current the world state. Transactions are
-collected inside blocks that are appended to the blockchain -- enabling you to
-understand the history of changes that have resulted in the current world state.
-The blockchain data structure is very different to the world state because once
-written, it cannot be modified; it is **immutable**.
+![ledger.ledger](./ledger.diagram.1.png) *Журнал L содержит блокчейн B и
+world state W, где блокчейн B определяет world state W. Можно сказать, что
+world state W выводится из блокчейна B.*
 
-![ledger.ledger](./ledger.diagram.1.png) *A Ledger L comprises blockchain B and
-world state W, where blockchain B determines world state W. We can also say that
-world state W is derived from blockchain B.*
+Удобно представлять, что в сети Hyperledger Fabric существует **единственный по смыслу** реестр. 
+Хотя на самом деле сеть поддерживает много копий реестра, которые согласуются между собой с 
+помощью процесса, называемого **консенсусом**. Термин **Distributed Ledger Technology** 
+(**DLT**) (Технология распределенного реестра) часто используется с таким типом реестра --- 
+единственного по смыслу, но хранящегося в множестве копий, распространенных по всей сети.
 
-It's helpful to think of there being one **logical** ledger in a Hyperledger
-Fabric network. In reality, the network maintains multiple copies of a ledger --
-which are kept consistent with every other copy through a process called
-**consensus**. The term **Distributed Ledger Technology** (**DLT**) is often
-associated with this kind of ledger -- one that is logically singular, but has
-many consistent copies distributed throughout a network.
-
-Let's now examine the world state and blockchain data structures in more detail.
+Давайте теперь рассмотрим структуры данных world state и блокчейн более подробно.
 
 ## World State
 
-The world state holds the current value of the attributes of a business object
-as a unique ledger state. That's useful because programs usually require the
-current value of an object; it would be cumbersome to traverse the entire
-blockchain to calculate an object's current value -- you just get it directly
-from the world state.
+World state содержит текущее значение атрибутов бизнес-объектов в виде уникального состояния 
+реестра. Это полезно, поскольку для программ обычно требуются текущее состояния объекта; было бы 
+сложно каждый раз просматривать всю блокчейн-сеть, вычисляя текущее состостояние объекта (в том 
+числе его цену) --- вместо этого его можно напрямую получить из world state.
 
-![ledger.worldstate](./ledger.diagram.3.png) *A ledger world state containing
-two states. The first state is: key=CAR1 and value=Audi. The second state has a
-more complex value: key=CAR2 and value={model:BMW, color=red, owner=Jane}. Both
-states are at version 0.*
+![ledger.worldstate](./ledger.diagram.3.png) *Реестр world state содержит
+два состояния. Первое: key=CAR1 и value=Audi. Второе состояние имеет более сложную структуру: 
+key=CAR2 
+и value={model:BMW, color=red, owner=Jane}. Оба состояния 0 версии.*
 
-A ledger state records a set of facts about a particular business object. Our
-example shows ledger states for two cars, CAR1 and CAR2, each having a key and a
-value. An application program can invoke a smart contract which uses simple
-ledger APIs to **get**, **put** and **delete** states. Notice how a state value
-can be simple (Audi...) or compound (type:BMW...). The world state is often
-queried to retrieve objects with certain attributes, for example to find all red
-BMWs.
+Состояние реестра содержит набор фактов об определенном бизнес-объекте. Наш пример показывает 
+состояния реестра для двух машин, CAR1 и CAR2, каждая из которых имеет ключ и значение. 
+Программа приложения может вызвать смарт-контракт, использующий простой API-реестр чтобы 
+**get**, **put** и **delete** (найти, добавить, удалить) состояния. Обратите внимание, что 
+значение состояние может быть простым (Audi...) или коплекным (type:BMW...). World state часто 
+используется, чтобы найти все объекты с определенными атрибутами, например, найти все красные 
+BMW.
 
-The world state is implemented as a database. This makes a lot of sense because
-a database provides a rich set of operators for the efficient storage and
-retrieval of states.  We'll see later that Hyperledger Fabric can be configured
-to use different world state databases to address the needs of different types
-of state values and the access patterns required by applications, for example in
-complex queries.
+World state используется как база данных. В этом есть смысл, поскольку база данных предоставляет 
+большой набор операторов для эффективного хранения и извлечения состояний. Позже мы увидем, что 
+Hyperledger Fabric можно настроить так, чтобы он использовал разные базы данных world state, 
+отвечающие потребностям различных типов значений состояния и моделей доступа, например, сложных 
+запросов.
 
-Applications submit transactions which capture changes to the world state, and
-these transactions end up being committed to the ledger blockchain. Applications
-are insulated from the details of this [consensus](../txflow.html) mechanism by
-the Hyperledger Fabric SDK; they merely invoke a smart contract, and are
-notified when the transaction has been included in the blockchain (whether valid
-or invalid). The key design point is that only transactions that are **signed**
-by the required set of **endorsing organizations** will result in an update to
-the world state. If a transaction is not signed by sufficient endorsers, it will
-not result in a change of world state. You can read more about how applications
-use [smart contracts](../smartcontract/smartcontract.html), and how to [develop
-applications](../developapps/developing_applications.html).
+Приложения подают транзакции, которые фиксируют изменения в world state, и эти транзакции 
+вносятся в реестр блокчейн. Приложения изолированы от деталей механизма [консенсуса]
+(../txflow.html) с помощью Hyperledger Fabric SDK; она просто вызывают смарт-контракт и 
+понимают, когда транзакция была включена в блокчейн (неважно, валидная или нет). Ключевой момент 
+разработки заключается в том, что только **подписанные** необходимыми **утвержающими 
+организациями** обновляют world state. Если транзакция не подписана утверждающими организациями, 
+она не сможет изменить world state. Можно почитать больше о том, как приложения используют 
+[смарт-контракты](../smartcontract/smartcontract.html), и как их [разрабатывать]
+(../developapps/developing_applications.html).
 
-You'll also notice that a state has a version number, and in the diagram above,
-states CAR1 and CAR2 are at their starting versions, 0. The version number is for
-internal use by Hyperledger Fabric, and is incremented every time the state
-changes. The version is checked whenever the state is updated to make sure the
-current states matches the version at the time of endorsement. This ensures that
-the world state is changing as expected; that there has not been a concurrent
-update.
+Вы можете заметить, что у состояния есть номер версии, например, на диаграме, расположенной 
+выше, состояния CAR1 и CAR2 на начальной версии, то есть 0. Номер версии предназначен для 
+внутреннего пользования Hyperledger Fabric, и каждый раз, когда состояние изменяется, номер 
+увеличивается. Версия проверяется при обновлении состояния для того, чтобы убедиться, что 
+текущее состояние соответствует версии на момент одобрения. Таким образом, world state 
+изменяется ожидаемо, и не происходит параллельных обновлений.
 
-Finally, when a ledger is first created, the world state is empty. Because any
-transaction which represents a valid change to world state is recorded on the
-blockchain, it means that the world state can be re-generated from the
-blockchain at any time. This can be very convenient -- for example, the world
-state is automatically generated when a peer is created. Moreover, if a peer
-fails abnormally, the world state can be regenerated on peer restart, before
-transactions are accepted.
+Когда реестр только создан, world state пустует. Поскольку любая транзакция, отображающая 
+валидное изменение world change, записана в блокчейне, world state в любой момент можно 
+восстановить из блокчейна. Это может оказаться очень удобным --- например, world state 
+автоматически генерируется, когда создается пир. Более того, если пир некорректно завершает свою 
+работу, world state может быть восстановлен при перезагрузке пира, до того, как принимаются 
+транзакции.
 
-## Blockchain
+## Блокчейн
 
-Let's now turn our attention from the world state to the blockchain. Whereas the
-world state contains a set of facts relating to the current state of a set of
-business objects, the blockchain is an historical record of the facts about how
-these objects arrived at their current states. The blockchain has recorded every
-previous version of each ledger state and how it has been changed.
+Давайте теперь переведем внимание с world state на блокчейн. Если world state содержит набор 
+фактов, относящихся к текущему состоянию бизнес-объектов, то блокчейн это летопись того, как эти 
+объекты пришли к их текущему состоянию. Блокчейн записывает каждую предыдущую версию каждого 
+состояния реестра и то, как он изменялся.
 
-The blockchain is structured as sequential log of interlinked blocks, where each
-block contains a sequence of transactions, each transaction representing a query
-or update to the world state. The exact mechanism by which transactions are
-ordered is discussed [elsewhere](../peers/peers.html#peers-and-orderers);
-what's important is that block sequencing, as well as transaction sequencing
-within blocks, is established when blocks are first created by a Hyperledger
-Fabric component called the **ordering service**.
+Блокчейн структурирован в виде журнала последовательных взаимосвязанных блоков, где каждый блок 
+состоит из поледовательности транзакций, каждая из которых представляет собой запрос или 
+обновление world state. Про механизмы, упорядочивающие транза кции, можно узнать [здесь]
+(../peers/peers.html#peers-and-orderers); упорядочивание блоков, также как и упорядочивание 
+транзакций в блоках происходит, когда блоки создаются Hyperledger Fabric, компонентом под 
+названием **ordering-служба**.
 
-Each block's header includes a hash of the block's transactions, as well a hash
-of the prior block's header. In this way, all transactions on the ledger are sequenced
-and cryptographically linked together. This hashing and linking makes the ledger data
-very secure. Even if one node hosting the ledger was tampered with, it would not be able to
-convince all the other nodes that it has the 'correct' blockchain because the ledger is
-distributed throughout a network of independent nodes.
+Заголовок каждого блока включает в себя хэш транзакций этого блока, а также хэш из заголовка 
+предыдущего блока. Таким образом, все транзакции в реестре упорядочены и криптографически 
+связаны между собой. Хэширование и связывание обеспечивают безопасность данных реестра. Даже 
+если один узел, ведущий реестр, был подделан, он не сможет убедить остальные узлы в том, что он 
+имеет корректный блокчейн, поскольку реестр распределен по всей сети независимых узлов.
 
-The blockchain is always implemented as a file, in contrast to the world state,
-which uses a database. This is a sensible design choice as the blockchain data
-structure is heavily biased towards a very small set of simple operations.
-Appending to the end of the blockchain is the primary operation, and query is
-currently a relatively infrequent operation.
+Блокчейн, в отличие от world state, являющегося базой данной, всегда реализован в виде файла. 
+Это разумный выбор, поскольку структура данных блокчейн поддерживает только небольшой набор 
+простых операций. Добавление в конец блокчейна --- основная операция, а запрос в настоящее время 
+является редкоиспользуемой операцией. 
 
-Let's have a look at the structure of a blockchain in a little more detail.
+Давайте более детально рассмотрим структуру блокчейн.
 
-![ledger.blockchain](./ledger.diagram.2.png) *A blockchain B containing blocks
-B0, B1, B2, B3. B0 is the first block in the blockchain, the genesis block.*
+![ledger.blockchain](./ledger.diagram.2.png) *Блокчейн B содержит блоки
+B0, B1, B2, B3. B0 --- первый блок, называемый genesis-блоком.*
 
-In the above diagram, we can see that **block** B2 has a **block data** D2 which
-contains all its transactions: T5, T6, T7.
+Как можно видеть в диаграмме выше, **блок** B2 содержит **данные блока** D2, состоящие из 
+транзакций: T5, T6, T7.
 
-Most importantly, B2 has a **block header** H2, which contains a cryptographic
-**hash** of all the transactions in D2 as well as a hash of H1. In this way,
-blocks are inextricably and immutably linked to each other, which the term **blockchain**
-so neatly captures!
+Что особенно важно, у B2 есть **заголовок блока** H2, который состоит из криптографического 
+**хэша** всех транзакций в D2, а также хэш H1. Таким образом, блоки неразрывно и неизменно 
+связаны друг с другом, что отражает суть термина **блокчейн** (цепь блоков).
 
-Finally, as you can see in the diagram, the first block in the blockchain is
-called the **genesis block**.  It's the starting point for the ledger, though it
-does not contain any user transactions. Instead, it contains a configuration
-transaction containing the initial state of the network channel (not shown). We
-discuss the genesis block in more detail when we discuss the blockchain network
-and [channels](../channels.html) in the documentation.
-
-## Blocks
-
-Let's have a closer look at the structure of a block. It consists of three
-sections
-
-* **Block Header**
-
-  This section comprises three fields, written when a block is created.
-
-  * **Block number**: An integer starting at 0 (the genesis block), and
-  increased by 1 for every new block appended to the blockchain.
-
-  * **Current Block Hash**: The hash of all the transactions contained in the
-  current block.
-
-  * **Previous Block Header Hash**: The hash from the previous block header.
-
-  These fields are internally derived by cryptographically hashing the block
-  data. They ensure that each and every block is inextricably linked to its
-  neighbour, leading to an immutable ledger.
-
-  ![ledger.blocks](./ledger.diagram.4.png) *Block header details. The header H2
-  of block B2 consists of block number 2, the hash CH2 of the current block data
-  D2, and the hash of the prior block header H1.*
+И наконец, как можно видеть на диаграмме, первый блок в блокчейне называется **genesis-блоком**. 
+Genesis-блок --- точка отсчета реестра, хоть он и не содержит никаких пользовательских 
+транзакций. Вместо этого, он состоит из конфигурационной транзакции, содержащей начальное 
+состояние сетевого канала (не показано). Мы обсудим genesis-блок более подробно, когда будем 
+обсуждать блокчейн-сеть и [каналы](../channels.html) в документации.
 
 
-* **Block Data**
+## Блоки
 
-  This section contains a list of transactions arranged in order. It is written
-  when the block is created by the ordering service. These transactions have a
-  rich but straightforward structure, which we describe [later](#Transactions)
-  in this topic.
+Давайте присмотримся к структуре блока. Блок состоит из трех разделов.
 
+* **Заголовок блока**
 
-* **Block Metadata**
+  Этот раздел состоит из трех полей, которые заполняются при создании блока.
 
-  This section contains the certificate and signature of the block creator which is used to verify
-  the block by network nodes.
-  Subsequently, the block committer adds a valid/invalid indicator for every transaction into
-  a bitmap that also resides in the block metadata, as well as a hash of the cumulative state updates
-  up until and including that block, in order to detect a state fork.
-  Unlike the block data  and header fields, this section is not an input to the block hash computation.
+  * **Номер блока**: Целое число, 0 у genesis-блока, у каждого следующего блока на 1 больше чем 
+  у предыдущего
 
+  * **Хэш блока**: Хэш всех транзакций, содержащихся в данном блоке.
 
-## Transactions
+  * **Хэш предыдущего блока**: Хэш из заголовка предыдущего блока.
+  
+  Эти поля заполняются с помощью криптографического хэщирования данных блока. Они обеспечивают 
+  неразрывную связь блоков, из-за чего реестр становится неизменным.
 
-As we've seen, a transaction captures changes to the world state. Let's have a
-look at the detailed **blockdata** structure which contains the transactions in
-a block.
-
-![ledger.transaction](./ledger.diagram.5.png) *Transaction details. Transaction
-T4 in blockdata D1 of block B1 consists of transaction header, H4, a transaction
-signature, S4, a transaction proposal P4, a transaction response, R4, and a list
-of endorsements, E4.*
-
-In the above example, we can see the following fields:
+  ![ledger.blocks](./ledger.diagram.4.png) *Детали заголовка блока. Заголовок H2
+  блока B2 содержит номер блока (2), хэш CH2 данных блока
+  D2, и хэш предыдущего заголовка блока H1.*
 
 
-* **Header**
-
-  This section, illustrated by H4, captures some essential metadata about the
-  transaction -- for example, the name of the relevant chaincode, and its
-  version.
+* **Данные блока**
 
 
-* **Signature**
-
-  This section, illustrated by S4, contains a cryptographic signature, created
-  by the client application. This field is used to check that the transaction
-  details have not been tampered with, as it requires the application's private
-  key to generate it.
+  Этот раздел содержит список упорядоченных транзакций. Он записывается ordering-службой при 
+  создании блока. Эти транзакции имеют простую, но итересную структуру, которую мы обсудим 
+  [позже](#Transactions).
 
 
-* **Proposal**
+* **Метаданные блока**
 
-  This field, illustrated by P4, encodes the input parameters supplied by an
-  application to the smart contract which creates the proposed ledger update.
-  When the smart contract runs, this proposal provides a set of input
-  parameters, which, in combination with the current world state, determines the
-  new world state.
+  Этот раздел содержит сертификат и подпись создателя блока, которая используется для проверки 
+  блока сетевыми узлами. Создатель блока добавляет валидный/невалидный идентификатор для каждой 
+  транзакции в bitmap, который также находится в метаданных блока, также как и хэш совокупных 
+  обновления состояния, произведенных до (и включая его) данного блока, для того, чтобы 
+  обнаружить разветвления состояния.
+  В отличие от данных блока и полей заголовка блока, этот раздел не учитываются при вычислении  
+  хэша блока.
+
+## Транзакции
+
+Как мы уже поняли, транзакция отражает изменения в world state. Давайте более детально 
+рассмотрим структуру **данные блока** (blockdata), которая содержит транзакции блока.
+
+![ledger.transaction](./ledger.diagram.5.png) *Детали транзакций. Транзакция
+T4 в данных блока D1 блока B1 состоит из заголовка транзакции, H4, подписи транзакции, S4, 
+предложения транзакции P4, ответа транзакции, R4, и списка подтверждений, E4.*
+
+В примере, приведенном выше, можно видеть следующие поля:
 
 
-* **Response**
+* **Заголовок**
 
-  This section, illustrated by R4, captures the before and after values of the
-  world state, as a **Read Write set** (RW-set). It's the output of a smart
-  contract, and if the transaction is successfully validated, it will be applied
-  to the ledger to update the world state.
+  Этот раздел, проиллюстрированный H4, содержит основные метаданные о транзакции --- например, 
+  имя соответствующей цепи и ее версию.
 
 
-* **Endorsements**
+* **Подпись**
 
+  Этот раздел, проиллючтрированный S4, содержит криптографическую подпись, созданную приложением 
+  клиента. Это поле используется для подтверждения того, что детали транзакции не были 
+  подделаны, поскольку оно требует приватного ключа приложения для создания.
+
+
+* **Предложение**
+
+  Этот раздел, проиллюстрированный P4, кодирует входные параметры смарт-контракта, 
+  предоставленные приложением, который генерирует предложение обновить реестр.
+  Когда выполняется смарт-контракт, это предложение обеспечивает набор входных данных 
+  параметров, которые в сочетании с текущим world state определяют новый world state.
+
+
+* **Ответ**
+
+  Этот раздел, проиллюстрированный R4, содержит значения world state до и после, как 
+  **Read Write set** (RW-set). Это результат работы смарт-контракта, и, если транзакция будет 
+  успешно 
+  подтверждена, она будет применена к реестру для обновления world state.
+
+
+* **Подтверждения**
+
+  Как показывает E4, это список подписанных ответов на транзакции от всех требуемых для политики 
+  подтверждения организаций. Можно видеть, что хотя в транзакцию включен лишь один ответ на 
+  транзакцию, на самом деле подтверждений больше. Так получается, поскольку каждое подтверждение 
+  кодирует ответ на транзакцию определенной организации --- что означает ???
+  //ToDo
   As shown in E4, this is a list of signed transaction responses from each
   required organization sufficient to satisfy the endorsement policy. You'll
   notice that, whereas only one transaction response is included in the
@@ -292,107 +274,92 @@ In the above example, we can see the following fields:
   meaning that there's no need to include any transaction response that doesn't
   match sufficient endorsements as it will be rejected as invalid, and not
   update the world state.
+Мы разобрали основные поля транзакции --- существуют другие, однако это основные, которые 
+необходимо было понять, чтобы иметь четкое представление о структуре данных реестра.
 
-That concludes the major fields of the transaction -- there are others, but
-these are the essential ones that you need to understand to have a solid
-understanding of the ledger data structure.
+## Параметры базы данных World State
 
-## World State database options
+World state реализовано в виде базы данных, что обеспечивает простое и эффективное хранение и 
+поиск состояний реестра. Как мы уже знаем, состояния реестра могут иметь простое и более сложно 
+структурированное значение, и из-за этого реализация базы данных world state может 
+варьироваться. Реализация world state может основываться как на LevelDB, так и на CouchDB.
 
-The world state is physically implemented as a database, to provide simple and
-efficient storage and retrieval of ledger states. As we've seen, ledger states
-can have simple or compound values, and to accommodate this, the world state
-database implementation can vary, allowing these values to be efficiently
-implemented. Options for the world state database currently include LevelDB and
-CouchDB.
+LevelDB, установленный по умолчанию, особенно удобен в случаях, когда состояние реестра это 
+простые пары ключ-значение. База данных расположена там же, где и узел пира --- она встроена в 
+тот же процесс операционной системы.
 
-LevelDB is the default and is particularly appropriate when ledger states are
-simple key-value pairs. A LevelDB database is co-located with the peer
-node -- it is embedded within the same operating system process.
+CouchDB --- правильный выбор, если состояния реестра структурированы в виде документов JSON, 
+поскольку CouchDB поддерживает сложные запросы и обновление сложных типов данных, которые часто 
+встречаются в транзакциях. Реализация CouchDB позволяет ему работать в отдельном процессе 
+операционной системы, но есть однозначное соответствие между пиром и экземпляром CouchDB. Смарт-
+контракты ничего этого не видят. Ознакомьтесь с [CouchDB в качестве StateDatabase]
+(../couchdb_as_state_database.html), если хотите узнать больше о Couch DB.
 
-CouchDB is a particularly appropriate choice when ledger states are structured
-as JSON documents because CouchDB supports the rich queries and update of richer
-data types often found in business transactions. Implementation-wise, CouchDB
-runs in a separate operating system process, but there is still a 1:1 relation
-between a peer node and a CouchDB instance. All of this is invisible to a smart
-contract. See [CouchDB as the StateDatabase](../couchdb_as_state_database.html)
-for more information on CouchDB.
+В LevelDB и CouchDB мы видим важное качество Hyperledger Fabric --- **изменяемость**. База 
+данных world state может быть хранилищем данных, хранилищем графов или временной базой данных. 
+Это обеспечивает гибкость типов состояний реестра и их доступность, что позволяет Hyperledger
+Fabric решать множество проблем самых разных типов.
 
-In LevelDB and CouchDB, we see an important aspect of Hyperledger Fabric -- it
-is *pluggable*. The world state database could be a relational data store, or a
-graph store, or a temporal database.  This provides great flexibility in the
-types of ledger states that can be efficiently accessed, allowing Hyperledger
-Fabric to address many different types of problems.
+## Пример реестра: fabcar
 
-## Example Ledger: fabcar
+Под конец раздела про реестр, давайте рассмотрим пример реестра. Запустив [пример реестра 
+fabcar](../write_first_app.html), вы создадите этот реестр.
 
-As we end this topic on the ledger, let's have a look at a sample ledger. If
-you've run the [fabcar sample application](../write_first_app.html), then you've
-created this ledger.
+Пример приложения fabcar создает набор из 10 уникальных машин; разного цвета, разного 
+производителя, разной модели и разного собственника. Вот так выглядит реестр после создания 
+первых четырех машин.
 
-The fabcar sample app creates a set of 10 cars each with a unique identity; a
-different color, make, model and owner. Here's what the ledger looks like after
-the first four cars have been created.
-
-![ledger.transaction](./ledger.diagram.6.png) *The ledger, L, comprises a world
-state, W and a blockchain, B. W contains four states with keys: CAR0, CAR1, CAR2
-and CAR3. B contains two blocks, 0 and 1. Block 1 contains four transactions:
+![ledger.transaction](./ledger.diagram.6.png) *Реестр, L, состоит из world
+state, W, и блокчейна, B. W содержит четыре состояния с ключами CAR0, CAR1, CAR2
+и CAR3. B содержит два блока, 0 и 1. Блок 1 содержит четыре транзакции:
 T1, T2, T3, T4.*
 
-We can see that the world state contains states that correspond to CAR0, CAR1,
-CAR2 and CAR3. CAR0 has a value which indicates that it is a blue Toyota Prius,
-currently owned by Tomoko, and we can see similar states and values for the
-other cars. Moreover, we can see that all car states are at version number 0,
-indicating that this is their starting version number -- they have not been
-updated since they were created.
+Можно видеть, что world state содержит состояния, соответствующие CAR0, CAR1,
+CAR2 и CAR3. Значение CAR0 дает понять, что это синяя Toyota Prius, в настоящее время 
+принадлежащая Tomoko. Такие же значения можно увидеть и у других машин. Более того, мы можем 
+видеть, что версия всех состояний машин --- 0, что показывает, что это их стартовый номер версии 
+--- их еще не обновляли после создания.
 
-We can also see that the blockchain contains two blocks.  Block 0 is the genesis
-block, though it does not contain any transactions that relate to cars. Block 1
-however, contains transactions T1, T2, T3, T4 and these correspond to
-transactions that created the initial states for CAR0 to CAR3 in the world
-state. We can see that block 1 is linked to block 0.
+Мы также видим, что блокчейн содержит два блока. Блок 0 --- genesis-блок --- не содержит 
+транзакций, касающихся машин. Блок 1, однако, содержит транзакции T1, T2, T3, T4, которые 
+соответствуют транзакциям, создавшим начальные состояния в world state машинам CAR0, CAR1,
+CAR2 и CAR3. Можно видеть, что блок 1 привязан к блоку 0.
 
-We have not shown the other fields in the blocks or transactions, specifically
-headers and hashes.  If you're interested in the precise details of these, you
-will find a dedicated reference topic elsewhere in the documentation. It gives
-you a fully worked example of an entire block with its transactions in glorious
-detail -- but for now, you have achieved a solid conceptual understanding of a
-Hyperledger Fabric ledger. Well done!
+Мы не показали оставшиеся поля блоков и транзакций, в частности заголовки и хэши. Если вас 
+интересуют детали, поищите в документации отдельную справочную тему, в которой есть полностью 
+проработанный детальный пример целого блока и его транзакций --- ну а пока вы достигли хорошего 
+понимания реестра Hyperledger Fabric. Молодцы!
 
-## Namespaces
+## Пространства имен
 
-Even though we have presented the ledger as though it were a single world state
-and single blockchain, that's a little bit of an over-simplification. In
-reality, each chaincode has its own world state that is separate from all other
-chaincodes. World states are in a namespace so that only smart contracts within
-the same chaincode can access a given namespace.
+Хотя мы и говорили, что у реестра есть единственное world state и единственный блокчейн, это 
+слегка упрощенное представление. На самом деле каждое звено цепи имеет собственное world state, 
+отдельное от других звений. World states расположены в пространстве имен так, что лишь смарт-
+контракты одного чейнкода имеют доступ к определенному пространству имен.
 
-A blockchain is not namespaced. It contains transactions from many different
-smart contract namespaces. You can read more about chaincode namespaces in this
-[topic](../developapps/chaincodenamespace.html).
+Блокчейн содержит транзакции разных пространств имен смарт-контрактов. Больше про пространства 
+имен чейнкодов можно почитать [тут](../developapps/chaincodenamespace.html).
 
-Let's now look at how the concept of a namespace is applied within a Hyperledger
-Fabric channel.
+Давайте посмотрим, как концепция пространства имен применяется в каналах Hyperledger
+Fabric.
 
-## Channels
+## Каналы
 
-In Hyperledger Fabric, each [channel](../channels.html) has a completely
-separate ledger. This means a completely separate blockchain, and completely
-separate world states, including namespaces. It is possible for applications and
-smart contracts to communicate between channels so that ledger information can
-be accessed between them.
+В Hyperledger Fabric, каждый [канал](../channels.html) имеет полностью отдельный реестр, 
+что означает полностью отдельный блокчейн и полностью отдельое world state, включая пространство 
+имен. Приложения и смарт-контракты могут общаться между каналами так, что информация реестров 
+передается между ними.
 
-You can read more about how ledgers work with channels in this
-[topic](../developapps/chaincodenamespace.html#channels).
+Про работу реестра и каналов можно почитать поподробнее
+[здесь](../developapps/chaincodenamespace.html#channels).
 
 
-## More information
+## Больше информации
 
-See the [Transaction Flow](../txflow.html),
-[Read-Write set semantics](../readwrite.html) and
-[CouchDB as the StateDatabase](../couchdb_as_state_database.html) topics for a
-deeper dive on transaction flow, concurrency control, and the world state
-database.
+Ознакомьтесь с разделами [Транзакционный поток](../txflow.html),
+[Семанитка набора Read-Write](../readwrite.html) and
+[CouchDB в качестве StateDatabase](../couchdb_as_state_database.html), чтобы узнать больше о 
+транзакционном потоке, контроле согласованности и базе данных world state.
 
 <!--- Licensed under Creative Commons Attribution 4.0 International License
 https://creativecommons.org/licenses/by/4.0/ -->
