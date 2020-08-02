@@ -1,190 +1,151 @@
-# Private data
+# Конфиденциальные данные
 
-## What is private data?
+## Что такое конфиденциальные данные?
 
-In cases where a group of organizations on a channel need to keep data private from
-other organizations on that channel, they have the option to create a new channel
-comprising just the organizations who need access to the data. However, creating
-separate channels in each of these cases creates additional administrative overhead
-(maintaining chaincode versions, policies, MSPs, etc), and doesn't allow for use
-cases in which you want all channel participants to see a transaction while keeping
-a portion of the data private.
+В случаях, когда группе организаций канала необходимо скрыть часть данных от других организаций канала, 
+они могут создать новый канал только из огранизаций, которым нужен доступ к этим данным.
+Однако создание отдельного канала создает административные накладные расходы 
+(поддержка актуальных версий чейнкода, политик, MSP и т.д.), и не решает проблемы в случаях, когда
+вы хотите, чтобы все участники канала увидели транзакцию, но при этом некоторые ее данные остались
+конфиденциальными.
 
-That's why Fabric offers the ability to create
-**private data collections**, which allow a defined subset of organizations on a
-channel the ability to endorse, commit, or query private data without having to
-create a separate channel.
+Поэтому Fabric предоставляет возможность создавать **Коллекции конфиденциальных данных**,
+что позволяет определенному подмножеству организаций канала иметь возможность подтверждать, сохранять или запрашивать конфиденциальные данные
+без нужды заводить отдельный канал.
 
-## What is a private data collection?
+## Что такое "коллекция конфиденциальных данных"?
 
-A collection is the combination of two elements:
+Коллекция - это совокупность двух элементов:
 
-1. **The actual private data**, sent peer-to-peer [via gossip protocol](../gossip.html)
-   to only the organization(s) authorized to see it. This data is stored in a
-   private state database on the peers of authorized organizations,
-   which can be accessed from chaincode on these authorized peers.
-   The ordering service is not involved here and does not see the
-   private data. Note that because gossip distributes the private data peer-to-peer
-   across authorized organizations, it is required to set up anchor peers on the channel,
-   and configure CORE_PEER_GOSSIP_EXTERNALENDPOINT on each peer,
-   in order to bootstrap cross-organization communication.
+1. **Самих конфиденциальных данных**, передаваемых от пира к пиру [через gossip-протокол](../gossip.html)
+   только организациям, авторизованным на доступ к данным. Эти данные хранятся в отдельной конфиденциальной
+   базе данных состояния (state DB) на пирах авторизованных организаций, которую можно использовать в чейнкоде авторизованных пиров.
+   Ордеринг-служба не вовлечена в этот механизм и не имеет доступа к данным.
+   Заметьте, что так как gossip-протокол распространяет конфиденциальные данные от пира одной организации к пиру другой,
+   требуется создать anchor-пиры в канале, и настроить
+   CORE_PEER_GOSSIP_EXTERNALENDPOINT на каждом пире для создания меж-организационного сообщения.
 
-2. **A hash of that data**, which is endorsed, ordered, and written to the ledgers
-   of every peer on the channel. The hash serves as evidence of the transaction and
-   is used for state validation and can be used for audit purposes.
+2. **Хеш этих данных** подтверждается, подвергается ордерингу и записывается в реестр каждого пира канала.
+   Хеш служит доказательством транзакции и используется для проверки state и может использоваться для проведения аудита.
 
-The following diagram illustrates the ledger contents of a peer authorized to have
-private data and one which is not.
+Следующая диаграмма иллюстрирует содержимое реестра на пире с доступом к конфиденциальным данным (authorized peer)
+и на пире без доступа к ним (unauthorized peer).
 
 ![private-data.private-data](./PrivateDataConcept-2.png)
 
-Collection members may decide to share the private data with other parties if they
-get into a dispute or if they want to transfer the asset to a third party. The
-third party can then compute the hash of the private data and see if it matches the
-state on the channel ledger, proving that the state existed between the collection
-members at a certain point in time.
+Участники коллекции могут дать доступ к данным другим участникам, если у них возникнут разногласия или если они решает
+поделиться данными с третьей стороной, которая может вычислить хеш приватных данных и проверить, сходится ли он с состоянием реестра канала, и если да, то это будет
+служить доказательством существования состояния канала в определенный момент времени.
 
-In some cases, you may decide to have a set of collections each comprised of a
-single organization. For example an organization may record private data in their own
-collection, which could later be shared with other channel members and
-referenced in chaincode transactions. We'll see examples of this in the sharing
-private data topic below.
+В некоторых случаях, вы можете решить использовать набор коллекций, каждая из которых предназначена только своей организации.
+Например, организация может записывать конфиденциальные данные в свою коллекцию, которой можно потом поделиться с другими 
+участниками канала и на использование которой можно указать в чейнкод-транзакциях.
+Примеры такого использования конфиденциальных данных будут ниже.
 
-### When to use a collection within a channel vs. a separate channel
+### В каких случаях создавать коллекцию внутри канала, а в каких создавать отдельный канал?
 
-* Use **channels** when entire transactions (and ledgers) must be kept
-  confidential within a set of organizations that are members of the channel.
+* Используйте **отдельный канал**, когда все транзакции и реестры должны быть скрыты и доступны только определенному набору организаций, 
+  которые и составят участников нового канала.
 
-* Use **collections** when transactions (and ledgers) must be shared among a set
-  of organizations, but when only a subset of those organizations should have
-  access to some (or all) of the data within a transaction.  Additionally,
-  since private data is disseminated peer-to-peer rather than via blocks,
-  use private data collections when transaction data must be kept confidential
-  from ordering service nodes.
+* Используйте **коллекции**, когда транзакции и реестры должны распространяться между множеством организаций, но только подмножество этих организаций
+  должно иметь доступ к части (или ко всему набору) данных транзакций. Кроме того, так как конфиденциальные данные распространяются от пира к пиру, а не
+  через блоки, используйте коллекции конфиденциальных данных, когда данные транзакции должны быть скрыты от узлов ордеринг-служб.
 
-## A use case to explain collections
+## Сценарий использования коллекций
 
-Consider a group of five organizations on a channel who trade produce:
+Представьте группу из 5 организаций канала по торговле продукцией:
 
-* **A Farmer** selling his goods abroad
-* **A Distributor** moving goods abroad
-* **A Shipper** moving goods between parties
-* **A Wholesaler** purchasing goods from distributors
-* **A Retailer** purchasing goods from shippers and wholesalers
+* **Фермер** (Farmer) продает свои товары за границу
+* **Дистрибьютор** (Distributer) поставляет товары за границу
+* **Грузоотправитель** (Shipper) перевозит товары между сторонами
+* **Оптовик** (Wholesaler) приобретает товары у агентов по сбыту
+* **Ритейлер** (Retailer) покупает товары от грузоотправителей и оптовиков
 
-The **Distributor** might want to make private transactions with the
-**Farmer** and **Shipper** to keep the terms of the trades confidential from
-the **Wholesaler** and the **Retailer** (so as not to expose the markup they're
-charging).
+**Дистрибьютор** хочет совершать конфиденциальные транзакции с **фермером** и **грузоотправителем**, чтобы не распространять условия сделок
+**оптовику** и **ритейлеру** и не выдать свою наценку.
 
-The **Distributor** may also want to have a separate private data relationship
-with the **Wholesaler** because it charges them a lower price than it does the
-**Retailer**.
+**Дистрибьютор** хочет иметь отчасти конфиденциальные отношения с **оптовиком**, так как выставляет ему более низкие цены, чем **ритейлеру**.
 
-The **Wholesaler** may also want to have a private data relationship with the
-**Retailer** and the **Shipper**.
+**Оптовик** также хочет иметь такие отношения с **ритейлером** и **грузоотправителем**.
 
-Rather than defining many small channels for each of these relationships, multiple
-private data collections **(PDC)** can be defined to share private data between:
+Вместо того, чтобы создавать по маленькому каналу на каждое такое отношение, можно организовать несколько коллекций
+приватных данных **(PDC, Private Data Collection)**:
 
-1. PDC1: **Distributor**, **Farmer** and **Shipper**
-2. PDC2: **Distributor** and **Wholesaler**
-3. PDC3: **Wholesaler**, **Retailer** and **Shipper**
+1. PDC1: **Дистрибьютор**, **Фермер** и **Грузоотправитель**
+2. PDC2: **Дистрибьютор** и **Оптовик**
+3. PDC3: **Оптовик**, **Ритейлер** и **Грузоотправитель**
 
 ![private-data.private-data](./PrivateDataConcept-1.png)
 
-Using this example, peers owned by the **Distributor** will have multiple private
-databases inside their ledger which includes the private data from the
-**Distributor**, **Farmer** and **Shipper** relationship and the
-**Distributor** and **Wholesaler** relationship.
+Пиры, принадлежащие **дистрибьютор** будут иметь несколько приватных баз данных внутри их реестра, включающих
+конфиденциальные данные PDC1 и PDC2.
 
 ![private-data.private-data](./PrivateDataConcept-3.png)
 
-## Transaction flow with private data
+## Транзакционный поток с конфиденциальными данными
 
-When private data collections are referenced in chaincode, the transaction flow
-is slightly different in order to protect the confidentiality of the private
-data as transactions are proposed, endorsed, and committed to the ledger.
+Когда в чейнкоде используются используются конфиденциальные данные, транзакционный поток
+немного меняется, чтобы скрыть конфиденциальные данные при совершении proposal, подтверждении и сохранении в реестр транзакций.
 
-For details on transaction flows that don't use private data refer to our
-documentation on [transaction flow](../txflow.html).
+Для подробного описания транзакционного потока без конфиденциальных данных, обратитесь к документации:
+[транзакционный поток](../txflow.html).
 
-1. The client application submits a proposal request to invoke a chaincode
-   function (reading or writing private data) to endorsing peers which are
-   part of authorized organizations of the collection. The private data, or
-   data used to generate private data in chaincode, is sent in a `transient`
-   field of the proposal.
+1. Клиентское приложение посылает proposal-запрос к подтверждающим пирам, чтобы вызвать функцию чейнкода (запись или чтение конфиденциальных данных).
+   Подтверждающие пиры должны быть частью организации с доступом к коллекции. 
+   Конфиденциальные данные, или данные, использующиеся для их генерации, посылаются в поле `transient` proposal'а.
 
-2. The endorsing peers simulate the transaction and store the private data in
-   a `transient data store` (a temporary storage local to the peer). They
-   distribute the private data, based on the collection policy, to authorized peers
-   via [gossip](../gossip.html).
+2. Подтверждающие пиры выполняют транзакцию и сохраняют конфиденциальные данные в 
+   `transient data store` (временном хранилище пира). Они распространяют конфиденциальные данные, основываясь на политике коллекции, авторизованным пирам по 
+   [gossip-протоколу](../gossip.html).
 
-3. The endorsing peer sends the proposal response back to the client. The proposal
-   response includes the endorsed read/write set, which includes public
-   data, as well as a hash of any private data keys and values. *No private data is
-   sent back to the client*. For more information on how endorsement works with
-   private data, click [here](../private-data-arch.html#endorsement).
+3. Подтверждающие пиры отправляют ответ на proposal обратно клиенту.
+   Ответ включает подтвержденный read/write set, включающий публичный данный вместе с хешем
+   ключей и значений конфиденциальных данных. *Никаких конфиденциальных данных
+   клиенту не посылается*. [Более детальная информация по подтверждению транзакций
+   с конфиденциальными данными](../private-data-arch.html#endorsement).
 
-4. The client application submits the transaction (which includes the proposal
-   response with the private data hashes) to the ordering service. The transactions
-   with the private data hashes get included in blocks as normal.
-   The block with the private data hashes is distributed to all the peers. In this way,
-   all peers on the channel can validate transactions with the hashes of the private
-   data in a consistent way, without knowing the actual private data.
+4. Клиентское приложение посылает транзакцию (включающую ответ на proposal с хешами конфиденциальных данных)
+   ордеринг-службе. Транзакция с хешами конфиденциальных данных включается в блок как обычная транзакция.
+   Блок с хешами конфиденциальных данных распространяется на все пиры. Таким образом,
+   все пиры канала могут проверить транзакции с хешами конфиденциальных данных согласованно, без знания конфиденциальных данных.
 
-5. At block commit time, authorized peers use the collection policy to
-   determine if they are authorized to have access to the private data. If they do,
-   they will first check their local `transient data store` to determine if they
-   have already received the private data at chaincode endorsement time. If not,
-   they will attempt to pull the private data from another authorized peer. Then they
-   will validate the private data against the hashes in the public block and commit the
-   transaction and the block. Upon validation/commit, the private data is moved to
-   their copy of the private state database and private writeset storage. The
-   private data is then deleted from the `transient data store`.
+5. Во время сохранения блока, авторизованные пира применяют политику коллекции, чтобы понять, имеют ли они доступ к конфиденциальным данным.
+   Если да, они проверят свой локальный `transient data store`, чтобы определить, получили ли они эти данные во время подтверждения чейнкода. Если не получили, то
+   они попытаются получить данные с другого авторизованного пира. Потом они сверят хеш конфиденциальных данных с хешем в публичном блоке и сохранят
+   транзакцию и блок. Во время проверки/сохранения, конфиденциальные данные перемещаются в их копию конфиденциальной state-базе данных и их конфиденциального
+   writeset хранилища. Затем конфиденциальные данные удаляются `transient data store`.
 
-## Sharing private data
+## Распространение конфиденциальных данных не авторизованным участникам
 
-In many scenarios private data keys/values in one collection may need to be shared with
-other channel members or with other private data collections, for example when you
-need to transact on private data with a channel member or group of channel members
-who were not included in the original private data collection. The receiving parties
-will typically want to verify the private data against the on-chain hashes
-as part of the transaction.
+Во многих сценариях некоторые значения из конфиденциальных данных должны быть отправлены
+другим участникам канала или включены в другую коллекцию, например, когда необходимо совершить
+транзакцию с конфиденциальными данными с участником или группой участников без доступа к коллекции.
+Принимающая данные сторона скорее всего захочет провести проверку конфиденциальных данных на совпадение их хеша
+с хешем в блокчейне как часть транзакции.
 
-There are several aspects of private data collections that enable the
-sharing and verification of private data:
+Есть несколько возможностей PDC, позволяющих обмен и проверку конфиденциальных данных:
 
-* First, you don't necessarily have to be a member of a collection to write to a key in
-  a collection, as long as the endorsement policy is satisfied.
-  Endorsement policy can be defined at the chaincode level, key level (using state-based
-  endorsement), or collection level (starting in Fabric v2.0).
+* Во-первых, вам не нужно быть участником коллекции, чтобы записать что-либо в нее, при условии, что соблюдена политика подтверждения.
+  Политика подтверждения может быть определена на уровне чейнкода, на уровне ключей (используя основанное на state подтверждение) или на уровне коллекции (начиная с Fabric v2.0).
 
-* Second, starting in v1.4.2 there is a chaincode API GetPrivateDataHash() that allows
-  chaincode on non-member peers to read the hash value of a private key. This is an
-  important feature as you will see later, because it allows chaincode to verify private
-  data against the on-chain hashes that were created from private data in previous transactions.
+* Во-вторых, начиная с v1.4.2 существует API чейнкода GetPrivateDataHash(), позволяющее
+  чейнкоду или пирам не входящим в коллекцию получать хеш по конфиденциальному ключу. Это важная функция, в чем вы убедитесь позже,
+  так как она позволяет чейнкоду сверять хеши конфиденциальных данных с теми, что лежат в блокчейне.
 
-This ability to share and verify private data should be considered when designing
-applications and the associated private data collections.
-While you can certainly create sets of multilateral private data collections to share data
-among various combinations of channel members, this approach may result in a large
-number of collections that need to be defined.
-Alternatively, consider using a smaller number of private data collections (e.g.
-one collection per organization, or one collection per pair of organizations), and
-then sharing private data with other channel members, or with other
-collections as the need arises. Starting in Fabric v2.0, implicit organization-specific
-collections are available for any chaincode to utilize,
-so that you don't even have to define these per-organization collections when
-deploying chaincode.
+Эта возможность распространять и проверять конфиденциальные данные должна быть учитана при проектировании приложении и связанных с ними PDC.
+Хотя вы, конечно, можете создать множество наборов много-организационных PDC для распространения данных между различными комбинациями участников канала,
+этот подход может привести к созданию большого числа коллекций, которые нужно определить.
+Вместо этого, рассмотрите создание небольшого числа PDC (например, одна коллекция на организацию или одна коллекция на пару организаций)
+а потом распространяйте указанным в этом разделе образом данные с другими участниками или коллекциями при необходимости.
+Начиная с Fabric v2.0, неявные внутриорганизационные коллекции доступны для использования любым чейнкодом, поэтому вам не придется создавать по коллекции на каждую организацию при
+развертывании чейнкода.
 
-### Private data sharing patterns
+### Паттерны проектирования с механизмов распространения конфиденциальных данных
 
-When modeling private data collections per organization, multiple patterns become available
-for sharing or transferring private data without the overhead of defining many multilateral
-collections. Here are some of the sharing patterns that could be leveraged in chaincode
-applications:
+При использовании внутриорганизационных PDC на каждую организацию, появляется несколько паттернов для распространения или передачи конфиденциальных данных
+без нужды в определении много-организационных коллекций. Вот несколько таких паттернов, которые могут быть использованы в чейнкод-приложениях:
 
+//ToDo
 * **Use a corresponding public key for tracking public state** -
   You can optionally have a matching public key for tracking public state (e.g. asset
   properties, current ownership. etc), and for every organization that should have access
