@@ -1,199 +1,181 @@
-# Policies
+# Политики
 
-**Audience**: Architects, application and smart contract developers,
-administrators
+**Для кого это**: Архитекторы, разработчики приложений и смарт-контрактов,
+администраторы
 
-In this topic, we'll cover:
+В этом разделе мы обсудим:
 
-* [What is a policy](#what-is-a-policy)
-* [Why are policies needed](#why-are-policies-needed)
+* [Что такое политика](#что-такое-политика)
+* [Зачем нужны политики](#зачем-нужны-политики)
 * [How are policies implemented throughout Fabric](#how-are-policies-implemented-throughout-fabric)
 * [Fabric policy domains](#the-fabric-policy-domains)
 * [How do you write a policy in Fabric](#how-do-you-write-a-policy-in-fabric)
-* [Fabric chaincode lifecycle](#fabric-chaincode-lifecycle)
+* [Fabric chaincode lifecycle](#fabric-chaincode-lifecycle)шл
 * [Overriding policy definitions](#overriding-policy-definitions)
 
-## What is a policy
+## Что такое политика?
 
-At its most basic level, a policy is a set of rules that define the structure
-for how decisions are made and specific outcomes are reached. To that end,
-policies typically describe a **who** and a **what**, such as the access or
-rights that an individual has over an **asset**. We can see that policies are
-used throughout our daily lives to protect assets of value to us, from car
-rentals, health, our homes, and many more.
+Простыми словами, политика это набор правил, определяющих структуру принятия 
+решений. Политика, как правило, описывает права, которыми субъект обладает в
+отношении какого-либо актива. Мы увидим, что политики используются в нашей 
+повседневной жизни для защиты важных активов, таких как машины или дома.
 
-For example, an insurance policy defines the conditions, terms, limits, and
-expiration under which an insurance payout will be made. The policy is
-agreed to by the policy holder and the insurance company, and defines the rights
-and responsibilities of each party.
+Например, страховой полис описывает условия, при которых будет выплачена 
+страховка. Политика --- соглашение между владельцем страховки и страховой 
+компанией и определяет права и обязанности обеих сторон.
 
-Whereas an insurance policy is put in place for risk management, in Hyperledger
-Fabric, policies are the mechanism for infrastructure management. Fabric policies
-represent how members come to agreement on accepting or rejecting changes to the
-network, a channel, or a smart contract. Policies are agreed to by the consortium
-members when a network is originally configured, but they can also be modified
-as the network evolves. For example, they describe the criteria for adding or
-removing members from a channel, change how blocks are formed, or specify the
-number of organizations required to endorse a smart contract. All of these
-actions are described by a policy which defines who can perform the action.
-Simply put, everything you want to do on a Fabric network is controlled by a
-policy.
+Страховые полиса используются для управления рисками, а в Hyperledger
+Fabric политики --- это механизм для управлением инфраструктурой. Политики 
+Fabric показывают, как члены сети приходят к соглашению, принимая или 
+отклоняя изменения в сети, канале или смарт-контракте. Политики согласуются
+консорциумом при первой настройке сети, однако их можно поменять по мере ее 
+роста и развития. Например, они описывают критерии добавления в канал и исключения 
+из него членов сети, могут поменять порядок формирования блоков или указать 
+число организаций, необходимое для утверждения смарт-контрактов. Все 
+эти действия описываются политикой, определяющей лица, которые могут совершить 
+определеннное действие. Проще говоря, все, что вы хотите делать в сети Fabric 
+регулируется политиками.
 
-## Why are policies needed
+## Зачем нужны политики
 
-Policies are one of the things that make Hyperledger Fabric different from other
-blockchains like Ethereum or Bitcoin. In those systems, transactions can be
-generated and validated by any node in the network. The policies that govern the
-network are fixed at any point in time and can only be changed using the same
-process that governs the code. Because Fabric is a permissioned blockchain whose
-users are recognized by the underlying infrastructure, those users have the
-ability to decide on the governance of the network before it is launched, and
-change the governance of a running network.
+Политики --- одна из черт Hyperledger Fabric, отличающих его от других блокчейнов,
+таких как Ethereum или Bitcoin. В таких системах транзакции могут создаваться и 
+утверждаться любым узлом в сети. Политики, регулирующие сеть, могут быть изменены в
+любой момент, но лишь с использованием того же процесса, который управляет кодом. 
+Поскольку Fabric --- permissioned-блокчейн, ее пользователи принимают все решения,
+касающиеся управления сети до ее запуска, а после запуска могут изменять ее.
 
-Policies allow members to decide which organizations can access or update a Fabric
-network, and provide the mechanism to enforce those decisions. Policies contain
-the lists of organizations that have access to a given resource, such as a
-user or system chaincode. They also specify how many organizations need to agree
-on a proposal to update a resource, such as a channel or smart contracts. Once
-they are written, policies evaluate the collection of signatures attached to
-transactions and proposals and validate if the signatures fulfill the governance
-agreed to by the network.
+Политики позволяют членам выбирать организации, которые имеют доступ в сеть Fabric 
+или право ее обновлять, и предоставляют для этого механизмы. Политики содержат списки
+организаций, имеющих доступ к определенному ресурсу, например пользователям или чейнкодам.
+Они также знают количество организаций должны дать свое согласие на предложение
+обновить ресурс, например, смарт-контракт или канал. Политики собирают подписи, 
+относящиеся к транзакциям и их предложениям и подтверждают их, если они соответствуют
+правилам, установленным в сети.
 
-## How are policies implemented throughout Fabric
+## Как политики реализованы в Fabric
 
-Policies are implemented at different levels of a Fabric network. Each policy
-domain governs different aspects of how a network operates.
+Политики реализованы на разных уровнях сети Fabric. Каждая отдельная область
+политики управляет разными аспектами работы сети.
 
-![policies.policies](./FabricPolicyHierarchy-2.png) *A visual representation
-of the Fabric policy hierarchy.*
+![policies.policies](./FabricPolicyHierarchy-2.png) *Наглядное представление
+иерархии политик Fabric.*
 
-### System channel configuration
+### Настройка системного канала в части ordering.
 
-Every network begins with an ordering **system channel**. There must be exactly
-one ordering system channel for an ordering service, and it is the first channel
-to be created. The system channel also contains the organizations who are the
-members of the ordering service (ordering organizations) and those that are
-on the networks to transact (consortium organizations).
+Каждая сеть начинается с **системного канала**. В каждой сети должен быть
+ровно один системный канал для ordering-службы, который создается первым.
+Системный канал содержит организации-члены ordering-службы (ordering-организации), 
+а также организации, которые являются сторонами транзакций (консорциум-организации).
 
-The policies in the ordering system channel configuration blocks govern the
-consensus used by the ordering service and define how new blocks are created.
-The system channel also governs which members of the consortium are allowed to
-create new channels.
+Политики в конфигурационных блоках системного канала управляют консенсусом,
+используемым ordering-службой, и определяют то, как создаются новые блоки. Системный
+канал также отвечает за то, кто из членов консорциума могут создавать новые каналы.
 
-### Application channel configuration
+### Настройка канала в части политик прикладных транзакций.
 
-Application _channels_ are used to provide a private communication mechanism
-between organizations in the consortium.
+Обычные _channels_ предоставляют механизмы для приватной коммуникации
+организаций консорциума.
 
-The policies in an application channel govern the ability to add or remove
-members from the channel. Application channels also govern which organizations
-are required to approve a chaincode before the chaincode is defined and
-committed to a channel using the Fabric chaincode lifecycle. When an application
-channel is initially created, it inherits all the ordering service parameters
-from the orderer system channel by default. However, those parameters (and the
-policies governing them) can be customized in each channel.
+Политики могут предоставить возможность удалять или добавлять членов в канал.
+Каналы также управляют тем, какие организации должны одобрить чейнкод до того, как 
+чейнкод определен и сохранен в канал, следуя жизненному циклу чейнкода в Fabric. Канал
+сразу после создания по умолчанию наследует все параметры ordering-службы и от 
+системного канала ordering-службы. Однако эти параметры (как и политики) можно настроить 
+в каждом канале.
 
-### Access control lists (ACLs)
+### Access control lists (ACL) (списки контроля доступа)
 
-Network administrators will be especially interested in the Fabric use of ACLs,
-which provide the ability to configure access to resources by associating those
-resources with existing policies. These "resources" could be functions on system
-chaincode (e.g., "GetBlockByNumber" on the "qscc" system chaincode) or other
-resources (e.g.,who can receive Block events). ACLs refer to policies
-defined in an application channel configuration and extends them to control
-additional resources. The default set of Fabric ACLs is visible in the
-`configtx.yaml` file under the `Application: &ApplicationDefaults` section but
-they can and should be overridden in a production environment. The list of
-resources named in `configtx.yaml` is the complete set of all internal resources
-currently defined by Fabric.
+Администраторам сети будет особенно интересно использование Fabric ACL (списки 
+контроля доступа), которые предоставляют возможность настраивать доступ к ресурсам,
+связывая эти ресурсы с существующей политикой. Эти "ресурсы" могут быть правами 
+на взаимодействие с системным чейнкодом (например, "GetBlockByNumber" для системного
+чейнкода"qscc") и другими ресурсами (например, возможность получать события, связанные 
+с блоками). ACL обращается к политикам, опрделенным в конфигурации канала и расширяет их
+для контроля над дополнительными ресурсами. По умолчанию набор ACL Fabric находится в 
+файле `configtx.yaml` под разделом `Application: &ApplicationDefaults`, но они могут и 
+должны быть переопределены в промышленном окружении. Список ресурсов, находящийся в 
+`configtx.yaml` --- полный набор всех внутренних ресурсов, на данный момент определенных 
+Fabric.
 
-In that file, ACLs are expressed using the following format:
+В этом файле ACL представлены в следующем формате:
 
 ```
 # ACL policy for chaincode to chaincode invocation
 peer/ChaincodeToChaincode: /Channel/Application/Readers
 ```
 
-Where `peer/ChaincodeToChaincode` represents the resource being secured and
-`/Channel/Application/Readers` refers to the policy which must be satisfied for
-the associated transaction to be considered valid.
+Здесь `peer/ChaincodeToChaincode` отвечает за предоставляемый ресурс, а
+`/Channel/Application/Readers` отсылает к политике, которая должна быть удовлетворена для того, 
+чтобы соответствующая сделка считалась действительной.
 
-For a deeper dive into ACLS, refer to the topic in the Operations Guide on [ACLs](../access_control.html).
+Чтобы узнать больше про ACL, ознакомьтесь с разделом про [ACLs](../access_control.html) из 
+Руководстве по эксплуатации.
 
-### Smart contract endorsement policies
+### Политика подтверждения смарт-контрактов.
 
-Every smart contract inside a chaincode package has an endorsement policy that
-specifies how many peers belonging to different channel members need to execute
-and validate a transaction against a given smart contract in order for the
-transaction to be considered valid. Hence, the endorsement policies define the
-organizations (through their peers) who must “endorse” (i.e., approve of) the
-execution of a proposal.
+Каждый смарт-контракт внутри пакета чейнкода имеет политику подтверждения, которая указывает, 
+сколько пиров разных членов канала должны выполнить и проверить транзакцию смарт-контракта, 
+чтобы транзакция была признана валидной. Таким образом, политика подтверждения определяет организации (через их пиры), которые должны "подтвердить" (одобрить) реализацию предложения.
 
-### Modification policies
 
-There is one last type of policy that is crucial to how policies work in Fabric,
-the `Modification policy`. Modification policies specify the group of identities
-required to sign (approve) any configuration _update_. It is the policy that
-defines how the policy is updated. Thus, each channel configuration element
-includes a reference to a policy which governs its modification.
+### Политики изменения
 
-## The Fabric policy domains
+`Modification policy` (политики изменения) --- последний тип политик, играющий важную роль в 
+работе Fabric. Политики изменения указывают группу identities, необходимых для подписи 
+(одобрения) любой конфигурации _update_. Это политика, определяющая, как другие политики могут 
+изменяться. Таким образом, каждый элемент конфигурации канала включает в себя ссылку на 
+политику, которая управляет изменениями этого канала.
 
-While Fabric policies are flexible and can be configured to meet the needs of a
-network, the policy structure naturally leads to a division between the domains
-governed by either the Ordering Service organizations or the members of the
-consortium. In the following diagram you can see how the default policies
-implement control over the Fabric policy domains below.
+## Области политик Fabric
 
-![policies.policies](./FabricPolicyHierarchy-4.png) *A more detailed look at the
-policy domains governed by the Orderer organizations and consortium organizations.*
+Хотя политики Fabric могут подстраиваться под нужды сети, области политик разделяются 
+управляемых организациями ordering-службы и управляемых членамт консорциума. В 
+нижеприведенной диаграмме можно увидеть, как стандартные политики реализуют контроль над 
+областями политик Fabric.
 
-A fully functional Fabric network can feature many organizations with different
-responsibilities. The domains provide the ability to extend different privileges
-and roles to different organizations by allowing the founders of the ordering
-service the ability to establish the initial rules and membership of the
-consortium. They also allow the organizations that join the consortium to create
-private application channels, govern their own business logic, and restrict
-access to the data that is put on the network.
+![policies.policies](./FabricPolicyHierarchy-4.png) *Более детальный взгяд на разделение политик 
+на управляемых ordering-организациями и управляемых организациями консорциума.*
 
-The system channel configuration and a portion of each application channel
-configuration provides the ordering organizations control over which organizations
-are members of the consortium, how blocks are delivered to channels, and the
-consensus mechanism used by the nodes of the ordering service.
+В функционирующей сети Fabric может существовать множество организаций, обладающих разными 
+обязанностями. Области предоставляют возможность раздачи различных ролей и привилегий разным 
+организациям, позволяя создателям ordering-службы устанавливать первоначальные правила и 
+членство в консорциуме. Также они позволяют присоединившимся к консорциуму организациям 
+создавать приватные каналы, управлять своей бизнес логикой, и регулировать доступ к данным, 
+вводящимся в сеть.
 
-The system channel configuration provides members of the consortium the ability
-to create channels. Application channels and ACLs are the mechanism that
-consortium organizations use to add or remove members from a channel and restrict
-access to data and smart contracts on a channel.
+Конфигурация системного канала и частичная конфигурация обычного канала предоставляет ordering-о
+рганизациям механизм консенсуса, исползуемый узлами ordering-службы, а также контроль над тем, 
+какие организации являются членами консорциума, как блоки 
+достовляются в каналы.
 
-## How do you write a policy in Fabric
+Конфигурация системного канала позволяет членам консорциума создавать каналы. Каналы и ACL --- 
+это механизмы, используемые организациями консорциума для добавления в канал и удаления из него, 
+а также регулирования доступа к данным и смарт-контрактам в канале.
 
-If you want to change anything in Fabric, the policy associated with the resource
-describes **who** needs to approve it, either with an explicit sign off from
-individuals, or an implicit sign off by a group. In the insurance domain, an
-explicit sign off could be a single member of the homeowners insurance agents
-group. And an implicit sign off would be analogous to requiring approval from a
-majority of the managerial members of the homeowners insurance group. This is
-particularly useful because the members of that group can change over time
-without requiring that the policy be updated. In Hyperledger Fabric, explicit
-sign offs in policies are expressed using the `Signature` syntax and implicit
-sign offs use the `ImplicitMeta` syntax.
+## Как написать политику в Fabric
 
-### Signature policies
+Если вы хотите что-нибудь изменить в Fabric, политика, связанная с ресурсом, определяет **кто** 
+должен подтвердить изменение, или с явной подписью каждого участника или же с неявной подписью 
+группы. В области страхования, аналогом явной подписи может быть требование одобрения хотя бы одного члена группы страхования. А аналогом неявной подписи может быть требование одобрения 
+большинством управляющих членов группы страхования. Это особенно полезно, поскольку изменения в 
+составе группы не требуют обновления политики. В Hyperledger Fabric явные подписи в политике используют синтаксис `Signature`, а неявные `ImplicitMeta`.
 
-`Signature` policies define specific types of users who must sign in order for a
-policy to be satisfied such as `OR('Org1.peer', 'Org2.peer')`. These policies are
-considered the most versatile because they allow for the construction of
-extremely specific rules like: “An admin of org A and 2 other admins, or 5 of 6
-organization admins”. The syntax supports arbitrary combinations of `AND`, `OR`
-and `NOutOf`. For example, a policy can be easily expressed by using
-`AND('Org1.member', 'Org2.member')` which means that a signature from at least
-one member in Org1 AND one member in Org2 is required for the policy to be satisfied.
+### Политики типа Signature 
 
-### ImplicitMeta policies
+Политики `Signature` указывают определенных типов пользователей, которые должны подписать для 
+подтверждения политики, например, `OR('Org1.peer', 'Org2.peer')`. Эти политики считаются самыми 
+универсальными, поскольку позволяют конструировать очень специфичные правила, например: 
+"Администратор организации А (org A) и 2 других администратора, или 5 из 6 администраторов 
+организации". Синтаксис поддерживает произвольные сочетания `AND`, `OR` и `NOutOf`. Например, 
+политику можно описать, используя `AND('Org1.member', 'Org2.member')`, что означает, что для 
+удовлетворения политики нужна подпись хотя бы одного члена Org1 И (AND) одного члена Org2. 
 
-`ImplicitMeta` policies are only valid in the context of channel configuration
-which is based on a tiered hierarchy of policies in a configuration tree. ImplicitMeta
+### Политики типа ImplicitMeta
+
+Политики `ImplicitMeta` допустимы только в контексте конфигурации канала, основанной на многоуровневой иерархии политики в дереве конфигураций. Политики ImplicitMeta объединяют в себе результат политик, расположенных глубже в конфигурационном дереве, определенных
+policies are only valid in the context of channel configuration
+which is based on a tiered hierarchy of policies in a configuration tree. 
 policies aggregate the result of policies deeper in the configuration tree that
 are ultimately defined by Signature policies. They are `Implicit` because they
 are constructed implicitly based on the current organizations in the
