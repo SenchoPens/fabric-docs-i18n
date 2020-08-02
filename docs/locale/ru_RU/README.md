@@ -46,7 +46,7 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
     - [ ] Membership Service Provider (MSP)
     - [ ] Policies
     - [ ] Peers
-    - [ ] Ledger
+    - [x] Ledger (edited)
     - [ ] The Ordering Service
     - [ ] Smart Contracts and Chaincode
     - [ ] Fabric chaincode lifecycle
@@ -62,7 +62,7 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
     - [x] Membership Service Providers (MSP) (edited)
     - [x] Using a Hardware Security Module (HSM)
     - [x] Channel Configuration (configtx)
-    - [ ] Endorsement policies
+    - [x] Endorsement policies
     - [ ] Pluggable transaction endorsement and validation
     - [ ] Access Control Lists (ACL)
     - [ ] MSP Implementation with Identity Mixer
