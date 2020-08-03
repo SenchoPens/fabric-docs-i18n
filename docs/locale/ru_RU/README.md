@@ -44,13 +44,13 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
     - [ ] Blockchain network
     - [x] Identity (edited)
     - [ ] Membership Service Provider (MSP)
-    - [ ] Policies
+    - [x] Policies
     - [ ] Peers
     - [x] Ledger (edited)
     - [ ] The Ordering Service
     - [ ] Smart Contracts and Chaincode
     - [ ] Fabric chaincode lifecycle
-    - [ ] Private data
+    - [x] Private data
     - [ ] Channel capabilities
     - [x] Use Cases
 - [ ] Getting Started
@@ -63,7 +63,7 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
     - [x] Using a Hardware Security Module (HSM)
     - [x] Channel Configuration (configtx)
     - [x] Endorsement policies
-    - [ ] Pluggable transaction endorsement and validation
+    - [x] Pluggable transaction endorsement and validation
     - [ ] Access Control Lists (ACL)
     - [ ] MSP Implementation with Identity Mixer
     - [ ] Identity Mixer MSP configuration generator (idemixgen)
