@@ -1,170 +1,151 @@
-Hyperledger Fabric Model
+Архитектура Hyperledger Fabric
 ========================
 
-This section outlines the key design features woven into Hyperledger Fabric that
-fulfill its promise of a comprehensive, yet customizable, enterprise blockchain solution:
+В этом разделе описываются ключевые свойства архитектуры Hyperledger Fabric, которые позволяют 
+платформе быть готовым, но настраиваимым промышленным блокчейн-решением: 
 
-* `Assets`_ --- Asset definitions enable the exchange of almost anything with
-  monetary value over the network, from whole foods to antique cars to currency
-  futures.
-* `Chaincode`_ --- Chaincode execution is partitioned from transaction ordering,
-  limiting the required levels of trust and verification across node types, and
-  optimizing network scalability and performance.
-* `Ledger Features`_ --- The immutable, shared ledger encodes the entire
-  transaction history for each channel, and includes SQL-like query capability
-  for efficient auditing and dispute resolution.
-* `Privacy`_ --- Channels and private data collections enable private and
-  confidential multi-lateral transactions that are usually required by
-  competing businesses and regulated industries that exchange assets on a common
-  network.
-* `Security & Membership Services`_ --- Permissioned membership provides a
-  trusted blockchain network, where participants know that all transactions can
-  be detected and traced by authorized regulators and auditors.
-* `Consensus`_ --- A unique approach to consensus enables the
-  flexibility and scalability needed for the enterprise.
+* `Активы`_ --- Возможность определения своих активов позволяет обмениваться практически всем, что имеет денежную стоимость в сети: от продуктов питания и антикварных автомобилей до валютных фьючерсов.
+
+* `Чейнкоды`_ --- Чейнкод выполняется отдельно от ordering транзакций, что понижает требуемый уровень доверия и проверки между типами узлов, а также оптимизирует производительность и масштабируемость.
+
+* `Свойства реестра`_ --- Неизменяемый распределенный реестр кодирует всю историю транзакций каждого канала и включает в себя функцию SQL-подобного запроса для эффективного контроля и разрешения споров.
+
+* `Конфиденциальность`_ --- Каналы и коллекции конфиденциальных данных позволяют осуществлять конфиденциальные и многосторонние сделки, которые обычно требуются для конкурирующих предприятиям и регулируемым отраслям, осуществляющим обмен активами в рамках общей сети.
+
+* `Службы Security & Membership`_ --- Permissioned membership предоставляет доверенную блокчейн-сеть, в которой участники понимают, что все транзакции отслеживаются уполномоченными регулирующими органами и аудиторами.
+
+* `Консенсус`_ --- Уникальный подход к консенсусу обеспечивает необходимые для предприятия гибкость и масштабируемость.
 
 
-Assets
+Активы
 ------
 
-Assets can range from the tangible (real estate and hardware) to the intangible
-(contracts and intellectual property).  Hyperledger Fabric provides the
-ability to modify assets using chaincode transactions.
+Активы могут варьироваться от материального имущества (недвижимость и оборудование) до 
+нематериального имущества (контракты и интеллектуальная собственность). Hyperledger Fabric 
+позволяет изменять активы с помощью чейнкод-транзакций.
 
-Assets are represented in Hyperledger Fabric as a collection of
-key-value pairs, with state changes recorded as transactions on a :ref:`Channel`
-ledger.  Assets can be represented in binary and/or JSON form.
+Активы реализованы в Hyperledger Fabric как коллекция пар ключ-значение, с изменениями 
+состояния, записанными в качестве транзакций в :ref:`Channel` реестра. Активы могут быть 
+реализованы в двоичном и/или JSON формате.
 
 
-Chaincode
+Чейнкоды
 ---------
 
-Chaincode is software defining an asset or assets, and the transaction instructions for
-modifying the asset(s); in other words, it's the business logic.  Chaincode enforces the rules for reading
-or altering key-value pairs or other state database information. Chaincode functions execute against
-the ledger's current state database and are initiated through a transaction proposal. Chaincode execution
-results in a set of key-value writes (write set) that can be submitted to the network and applied to
-the ledger on all peers.
+Чейнкод это программа, определяющая активы и инструкции по изменению активов, можно сказать, 
+чейнкоды определяют бизнес логику. Чейнкод обеспечивает соблюдение правил чтения и изменения пар 
+ключ-значение или другой информации из базы данных. Функции чейнкода исполяются на основе 
+текущего состояния базы данных реестра и инициализируются транзакционным proposal. Результатом 
+работы чейнкода является набор записей (записывающих наборов) пар ключ-значение, которые могут 
+быть занесены в реестр всех пиров и представлены в сеть.
 
-
-Ledger Features
+Свойства реестра
 ---------------
 
-The ledger is the sequenced, tamper-resistant record of all state transitions in the fabric.  State
-transitions are a result of chaincode invocations ('transactions') submitted by participating
-parties.  Each transaction results in a set of asset key-value pairs that are committed to the
-ledger as creates, updates, or deletes.
+Реестр это последовательная, защищенная от подделки запись всех переходов состояния Fabric. 
+Переходы состояния являются результатом вызова чейнкода ("транзакций") участвующими сторонами. 
+Результатом каждой транзакции (создающей, обновляющей или удаляющей) является набор пар ключ-
+значение активов, привязанных к реестру.
 
-The ledger is comprised of a blockchain ('chain') to store the immutable, sequenced record in
-blocks, as well as a state database to maintain current fabric state.  There is one ledger per
-channel. Each peer maintains a copy of the ledger for each channel of which they are a member.
+Реестр состоит из блокчейна для хранения неизменяемой последовательной записи блоков, а также 
+базы данных состояний для поддержки текущего состояния Fabric. Для каждого канала существует 
+свой реестр. Каждый пир поддерживает копию реестра для каждого канала, в котором он состоит.
 
-Some features of a Fabric ledger:
+Некоторые свойства реестра Fabric:
 
-- Query and update ledger using key-based lookups, range queries, and composite key queries
-- Read-only queries using a rich query language (if using CouchDB as state database)
-- Read-only history queries --- Query ledger history for a key, enabling data provenance scenarios
-- Transactions consist of the versions of keys/values that were read in chaincode (read set) and keys/values that were written in chaincode (write set)
-- Transactions contain signatures of every endorsing peer and are submitted to ordering service
-- Transactions are ordered into blocks and are "delivered" from an ordering service to peers on a channel
-- Peers validate transactions against endorsement policies and enforce the policies
-- Prior to appending a block, a versioning check is performed to ensure that states for assets that were read have not changed since chaincode execution time
-- There is immutability once a transaction is validated and committed
-- A channel's ledger contains a configuration block defining policies, access control lists, and other pertinent information
-- Channels contain :ref:`MSP` instances allowing for crypto materials to be derived from different certificate authorities
+- Запрос и обновления реестра с использованием запросов на основе ключа, range-запросов, и composite key запросов
+- Запросы только для чтения, использующие богатый язык запросов (при использовании CouchDB в качестве базы данных)
+- Запросы истории только для чтения --- Запросы истории реестра по ключу, позволяющие узнать происхождение данных
+- Транзакции состоят из версий ключ-значения, прочитанных в чейнкоде (набор чтения) и ключей-значений, записанных в чейнкод (набор записи)
+- Транзакции содержат подписи каждого подтверждающего пира и переданы по каналам ordering-службой пирами
+- Транзакции упорядочиваются в блоки и доставляются по каналам от ordering-службы к пирам
+- Пиры проверяют транзакции на соответствие политике подтверждения и обеспечивают соблюдение политики
+- Перед добавлением блока проводится проверка версии для того, чтобы убедиться в том, что состояние активов не изменилось с момента исполнения чейнкода
+- После подтверждения транзакции она неизменяема
+- Реестр канала содержит конфигурационный блок, определяющий политики, ACL (список контроля доступа) и другую информацию
+- Каналы содержат :ref:`MSP`, позволяющих получать криптографические материалы от различных CA (certificate authorities)
 
-See the :doc:`ledger` topic for a deeper dive on the databases, storage structure, and "query-ability."
+Чтобы узнать больше о базах данных, структурах хранилища и "query-ability", ознакомьтесь с 
+разделом :doc:`ledger`.
 
 
-Privacy
+Конфиденциальность
 -------
 
-Hyperledger Fabric employs an immutable ledger on a per-channel basis, as well as
-chaincode that can manipulate and modify the current state of assets (i.e. update
-key-value pairs).  A ledger exists in the scope of a channel --- it can be shared
-across the entire network (assuming every participant is operating on one common
-channel) --- or it can be privatized to include only a specific set of participants.
+Hyperledger Fabric использует неизменяемый реестр в каждом канале, а также чейнкод, который 
+может изменять текущее состояние активов (т.е. обновлять пары ключ-значение). Реестр может 
+храниться по всей сети (при условии, что каждый участник есть в одном общем канале) --- или 
+может храниться только среди определенного набора участников (быть конфиденциальным).
 
-In the latter scenario, these participants would create a separate channel and
-thereby isolate/segregate their transactions and ledger.  In order to solve
-scenarios that want to bridge the gap between total transparency and privacy,
-chaincode can be installed only on peers that need to access the asset states
-to perform reads and writes (in other words, if a chaincode is not installed on
-a peer, it will not be able to properly interface with the ledger).
+В последнем случае, эти участники создадут отдельный канал и тем самым изолируют их транзакции и 
+реестр. Для того чтобы реализовать сценарии, совмещающие полную прозрачность и 
+конфиденциальность, чейнкод может быть установлен только у пиров, которым нужен доступ к 
+состояниям к состояниям активов для чтения и записи (другими словами, если у пира не установлен 
+чейнкод, он не сможет взаимодействовать с реестром).
 
-When a subset of organizations on that channel need to keep their transaction
-data confidential, a private data collection (collection) is used to segregate
-this data in a private database, logically separate from the channel ledger,
-accessible only to the authorized subset of organizations.
+Когда подгруппа организаций канала хочет сохранить данные их транзакций конфиденциальными, 
+используется коллекция конфиденциальных данных (коллекция), отделяющая эти данные в приватную 
+базу данных, отдельную от реестра канала и доступную только уполномоченной подгруппе 
+организаций.
 
-Thus, channels keep transactions private from the broader network whereas
-collections keep data private between subsets of organizations on the channel.
+Таким образом, каналы обеспечивают конфиденциальность транзакций от пользователей всей сети, а 
+коллекции обеспечивают конфиденциальность данных между подгруппами организаций в канале.
 
-To further obfuscate the data, values within chaincode can be encrypted
-(in part or in total) using common cryptographic algorithms such as AES before
-sending transactions to the ordering service and appending blocks to the ledger.
-Once encrypted data has been written to the ledger, it can be decrypted only by
-a user in possession of the corresponding key that was used to generate the cipher
-text.
+Для более надежной конфиденциальности данных, значения в чейнкоде могут быть зашифрованы 
+(частично или полностью), с использованием обычных криптографических алгоритмов (например, AES) 
+перед отправкой транзакции ordering-службе и добавлением блоков в реестр. После того, как 
+зашифрованные данные записываются в реестр, ее может расшифровать лишь пользователь, владеющий 
+ключом, использованным при создании зашифрованного текста.
 
-See the :doc:`private-data-arch` topic for more details on how to achieve
-privacy on your blockchain network.
+Ознакомьтесь с разделом :doc:`private-data-arch` для более подробных деталей о способах 
+достижения конфиденциальности в вашей блокчейн-сети.
 
 
-Security & Membership Services
+Службы Security & Membership
 ------------------------------
 
-Hyperledger Fabric underpins a transactional network where all participants have
-known identities.  Public Key Infrastructure is used to generate cryptographic
-certificates which are tied to organizations, network components, and end users
-or client applications.  As a result, data access control can be manipulated and
-governed on the broader network and on channel levels.  This "permissioned" notion
-of Hyperledger Fabric, coupled with the existence and capabilities of channels,
-helps address scenarios where privacy and confidentiality are paramount concerns.
+В основе Hyperledger Fabric лежит транзакционная сеть, в которой у всех участников есть 
+известная identity. Public Key Infrastructure (Инфроструктура публичного ключа) раздает 
+криптографические сертификаты, привязанные к организациям, сетевым компонентам, конечным 
+пользователям или клиентским приложениям. В результате управление доступом к данным регулируется 
+и изменяется и на широком сетевом уровне, и на уровне каналов. Понятие "permissioned" 
+Hyperledger Fabric в сочетании с возможностями каналов позволяет рассматривать сценарии, в 
+которых конфиденциальность имеет первостепенное значение.
 
-See the :doc:`msp` topic to better understand cryptographic
-implementations, and the sign, verify, authenticate approach used in
-Hyperledger Fabric.
+Для лучшего понимания реализации криптографии, подписями, проверкой и аутентификацией, 
+используемых в Hyperledger Fabric ознакомьтесь с разделом :doc:`msp`.
 
 
-Consensus
+Консенсус
 ---------
 
-In distributed ledger technology, consensus has recently become synonymous with
-a specific algorithm, within a single function. However, consensus encompasses more
-than simply agreeing upon the order of transactions, and this differentiation is
-highlighted in Hyperledger Fabric through its fundamental role in the entire
-transaction flow, from proposal and endorsement, to ordering, validation and commitment.
-In a nutshell, consensus is defined as the full-circle verification of the correctness of
-a set of transactions comprising a block.
+В техноллогии распределенного реестра консенсус стал синонимичен алгоритму с единственной 
+функцией. Однако консенсус охватывает больше чем просто согласование порядка транзакций, в 
+Hyperledger Fabric консенсус играет основопологающую роль во всем потоке транзакций: от proposal 
+и подтверждения до ordering и проверки. По сути, консенсус --- это полномасштабная 
+проверка корректности набора транзакций, составляющих блок.
 
-Consensus is achieved ultimately when the order and results of a block's
-transactions have met the explicit policy criteria checks. These checks and balances
-take place during the lifecycle of a transaction, and include the usage of
-endorsement policies to dictate which specific members must endorse a certain
-transaction class, as well as system chaincodes to ensure that these policies
-are enforced and upheld.  Prior to commitment, the peers will employ these
-system chaincodes to make sure that enough endorsements are present, and that
-they were derived from the appropriate entities.  Moreover, a versioning check
-will take place during which the current state of the ledger is agreed or
-consented upon, before any blocks containing transactions are appended to the ledger.
-This final check provides protection against double spend operations and other
-threats that might compromise data integrity, and allows for functions to be
-executed against non-static variables.
+Консенсус достигается, когда порядок и результат транзакций блока соответствуют явным критериям 
+проверки политики. Эти проверки происходят на протяжении жизненного цикла транзакции и включают 
+в себя использование (a) политик подтверждения, определяющих, какие участники должны подтвердить 
+транзакцию определенного класса, и (b) системных чейнкодов, обеспечивающего соблюдение этих 
+политик. Перед исполнением обязательств пиры используют чейнкоды, чтобы убедиться, что все 
+подтверждения присутствуют и получены от соответствующих органов. Кроме того, проводится 
+проверка версии, в ходе которой согласовывается текущее состояние реестра, прежде чем любые 
+блоки, содержащие транзакции, будут применены к реестру. Эта последняя проверка обеспечивает 
+защиту от вторичного использования операций и других угроз, которые могут нарушить целостность 
+данных, и позволяет выполнять функции против нестатичных переменных. 
 
-In addition to the multitude of endorsement, validity and versioning checks that
-take place, there are also ongoing identity verifications happening in all
-directions of the transaction flow.  Access control lists are implemented on
-hierarchical layers of the network (ordering service down to channels), and
-payloads are repeatedly signed, verified and authenticated as a transaction proposal passes
-through the different architectural components.  To conclude, consensus is not
-merely limited to the agreed upon order of a batch of transactions; rather,
-it is an overarching characterization that is achieved as a byproduct of the ongoing
-verifications that take place during a transaction's journey from proposal to
-commitment.
+В дополнение к многочисленным проверкам одобрения, действительности и версии, во всех 
+направлениях транзакционных потоков также происходят проверки identity. ACL (списки контроля 
+допуска) реализованы на разных иерархических уровнях сети (от ordering-служб до каналов), и 
+полезные нагрузки (payloads) неоднократно подписываются и проверяются по мере прохождения 
+сделкой различных архитектурных компонентов. В заключение, консенсус не органичивается 
+согласованым упорядочиванием набора транзакций, это всеобъемлющая характеристика, которая 
+достигается в ходе текущих проверок, проводимых в ходе перехода сделки от proposal к 
+обязательствам.
 
-Check out the :doc:`txflow` diagram for a visual representation
-of consensus.
+Ознакомьтесь с диаграммой :doc:`txflow` для визуального представления консенсуса.
 
 .. Licensed under Creative Commons Attribution 4.0 International License
    https://creativecommons.org/licenses/by/4.0/
