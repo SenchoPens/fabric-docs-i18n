@@ -6,11 +6,11 @@
 они могут создать новый канал только из огранизаций, которым нужен доступ к этим данным.
 Однако создание отдельного канала создает административные накладные расходы 
 (поддержка актуальных версий чейнкода, политик, MSP и т.д.), и не решает проблемы в случаях, когда
-вы хотите, чтобы все участники канала увидели транзакцию, но при этом некоторые ее данные остались
-конфиденциальными.
+вы хотите, чтобы все участники канала увидели транзакцию, но при этом некоторые ее данные были
+от них скрыты.
 
 Поэтому Fabric предоставляет возможность создавать **Коллекции конфиденциальных данных**,
-что позволяет определенному подмножеству организаций канала иметь возможность подтверждать, сохранять или запрашивать конфиденциальные данные
+которые позволяют определенному подмножеству организаций канала иметь возможность подтверждать, сохранять или запрашивать конфиденциальные данные
 без нужды заводить отдельный канал.
 
 ## Что такое "коллекция конфиденциальных данных"?
@@ -19,14 +19,14 @@
 
 1. **Самих конфиденциальных данных**, передаваемых от пира к пиру [через gossip-протокол](../gossip.html)
    только организациям, авторизованным на доступ к данным. Эти данные хранятся в отдельной конфиденциальной
-   базе данных состояния (state DB) на пирах авторизованных организаций, которую можно использовать в чейнкоде авторизованных пиров.
+   базе данных состояния (state DB) на пирах авторизованных организаций, доступной в чейнкоде авторизованных пиров.
    Ордеринг-служба не вовлечена в этот механизм и не имеет доступа к данным.
    Заметьте, что так как gossip-протокол распространяет конфиденциальные данные от пира одной организации к пиру другой,
    требуется создать anchor-пиры в канале, и настроить
-   CORE_PEER_GOSSIP_EXTERNALENDPOINT на каждом пире для создания меж-организационного сообщения.
+   CORE_PEER_GOSSIP_EXTERNALENDPOINT на каждом пире для установления меж-организационного сообщения.
 
 2. **Хеш этих данных** подтверждается, подвергается ордерингу и записывается в реестр каждого пира канала.
-   Хеш служит доказательством транзакции и используется для проверки state и может использоваться для проведения аудита.
+   Хеш служит доказательством транзакции и используется для проверки state и для проведения аудита.
 
 Следующая диаграмма иллюстрирует содержимое реестра на пире с доступом к конфиденциальным данным (authorized peer)
 и на пире без доступа к ним (unauthorized peer).
@@ -34,18 +34,18 @@
 ![private-data.private-data](./PrivateDataConcept-2.png)
 
 Участники коллекции могут дать доступ к данным другим участникам, если у них возникнут разногласия или если они решает
-поделиться данными с третьей стороной, которая может вычислить хеш приватных данных и проверить, сходится ли он с состоянием реестра канала, и если да, то это будет
+поделиться данными с третьей стороной, которая может вычислить хеш конфиденциальных данных и проверить, сходится ли он с состоянием реестра канала, и если да, то это будет
 служить доказательством существования состояния канала в определенный момент времени.
 
 В некоторых случаях, вы можете решить использовать набор коллекций, каждая из которых предназначена только своей организации.
-Например, организация может записывать конфиденциальные данные в свою коллекцию, которой можно потом поделиться с другими 
-участниками канала и на использование которой можно указать в чейнкод-транзакциях.
+Например, организация может записывать конфиденциальные данные в свою коллекцию, а потом делиться ими с другими 
+участниками канала и использовать их в чейнкод-транзакциях.
 Примеры такого использования конфиденциальных данных будут ниже.
 
 ### В каких случаях создавать коллекцию внутри канала, а в каких создавать отдельный канал?
 
 * Используйте **отдельный канал**, когда все транзакции и реестры должны быть скрыты и доступны только определенному набору организаций, 
-  которые и составят участников нового канала.
+  образующему участников нового канала.
 
 * Используйте **коллекции**, когда транзакции и реестры должны распространяться между множеством организаций, но только подмножество этих организаций
   должно иметь доступ к части (или ко всему набору) данных транзакций. Кроме того, так как конфиденциальные данные распространяются от пира к пиру, а не
@@ -69,7 +69,7 @@
 **Оптовик** также хочет иметь такие отношения с **ритейлером** и **грузоотправителем**.
 
 Вместо того, чтобы создавать по маленькому каналу на каждое такое отношение, можно организовать несколько коллекций
-приватных данных **(PDC, Private Data Collection)**:
+конфиденциальных данных **(PDC, Private Data Collection)**:
 
 1. PDC1: **Дистрибьютор**, **Фермер** и **Грузоотправитель**
 2. PDC2: **Дистрибьютор** и **Оптовик**
@@ -77,8 +77,8 @@
 
 ![private-data.private-data](./PrivateDataConcept-1.png)
 
-Пиры, принадлежащие **дистрибьютор** будут иметь несколько приватных баз данных внутри их реестра, включающих
-конфиденциальные данные PDC1 и PDC2.
+Пиры, принадлежащие **дистрибьютору** будут иметь несколько приватных баз данных внутри их реестра, включающих
+коллекции PDC1 и PDC2.
 
 ![private-data.private-data](./PrivateDataConcept-3.png)
 
@@ -113,15 +113,15 @@
    Если да, они проверят свой локальный `transient data store`, чтобы определить, получили ли они эти данные во время подтверждения чейнкода. Если не получили, то
    они попытаются получить данные с другого авторизованного пира. Потом они сверят хеш конфиденциальных данных с хешем в публичном блоке и сохранят
    транзакцию и блок. Во время проверки/сохранения, конфиденциальные данные перемещаются в их копию конфиденциальной state-базе данных и их конфиденциального
-   writeset хранилища. Затем конфиденциальные данные удаляются `transient data store`.
+   writeset хранилища. Затем конфиденциальные данные удаляются из `transient data store`.
 
-## Распространение конфиденциальных данных не авторизованным участникам
+## Распространение конфиденциальных данных неавторизованным участникам
 
-Во многих сценариях некоторые значения из конфиденциальных данных должны быть отправлены
+Во многих сценариях некоторые конфиденциальные данные должны быть отправлены
 другим участникам канала или включены в другую коллекцию, например, когда необходимо совершить
 транзакцию с конфиденциальными данными с участником или группой участников без доступа к коллекции.
 Принимающая данные сторона скорее всего захочет провести проверку конфиденциальных данных на совпадение их хеша
-с хешем в блокчейне как часть транзакции.
+с хешем в блокчейне в процессе создания транзакции.
 
 Есть несколько возможностей PDC, позволяющих обмен и проверку конфиденциальных данных:
 
@@ -129,7 +129,7 @@
   Политика подтверждения может быть определена на уровне чейнкода, на уровне ключей (используя основанное на state подтверждение) или на уровне коллекции (начиная с Fabric v2.0).
 
 * Во-вторых, начиная с v1.4.2 существует API чейнкода GetPrivateDataHash(), позволяющее
-  чейнкоду или пирам не входящим в коллекцию получать хеш по конфиденциальному ключу. Это важная функция, в чем вы убедитесь позже,
+  чейнкоду или пирам без доступа к коллекции получать хеш по ключу. Это важная функция, в чем вы убедитесь позже,
   так как она позволяет чейнкоду сверять хеши конфиденциальных данных с теми, что лежат в блокчейне.
 
 Эта возможность распространять и проверять конфиденциальные данные должна быть учитана при проектировании приложении и связанных с ними PDC.
@@ -140,194 +140,142 @@
 Начиная с Fabric v2.0, неявные внутриорганизационные коллекции доступны для использования любым чейнкодом, поэтому вам не придется создавать по коллекции на каждую организацию при
 развертывании чейнкода.
 
-### Паттерны проектирования с механизмов распространения конфиденциальных данных
+### Паттерны распространения конфиденциальных данных
 
 При использовании внутриорганизационных PDC на каждую организацию, появляется несколько паттернов для распространения или передачи конфиденциальных данных
 без нужды в определении много-организационных коллекций. Вот несколько таких паттернов, которые могут быть использованы в чейнкод-приложениях:
 
-//ToDo
-* **Use a corresponding public key for tracking public state** -
-  You can optionally have a matching public key for tracking public state (e.g. asset
-  properties, current ownership. etc), and for every organization that should have access
-  to the asset's corresponding private data, you can create a private key/value in each
-  organization's private data collection.
+* **Контроль доступа (Access Control) с помощью чейнкода** -
+  Вы можете реализовать контроль доступа через чейнкод, чтобы указать, какие клиенты могут
+  совершать запросы PDC. Например, храните ACL (Access Control List) для конфиденциальных данных:
+  в чейнкоде получите удостоверение клиента (через GetCreator() API чейнкода или CID (client identity)
+  library API GetID() или GetMSPID()) и проверьте, что он имеет доступ к конфиденциальным данным, и только тогда их
+  возвращайте. Похожим образом вы можете потребовать, чтобы клиент передал в чейнкод пароль, который должен сойтись с паролем из PDC.
+  Такой же подход может использоваться, чтобы ограничить доступ пользователя к данным не из PDC.
 
-* **Chaincode access control** -
-  You can implement access control in your chaincode, to specify which clients can
-  query private data in a collection. For example, store an access control list
-  for a private data collection key or range of keys, then in the chaincode get the
-  client submitter's credentials (using GetCreator() chaincode API or CID library API
-  GetID() or GetMSPID() ), and verify they have access before returning the private
-  data. Similarly you could require a client to pass a passphrase into chaincode,
-  which must match a passphrase stored at the key level, in order to access the
-  private data. Note, this pattern can also be used to restrict client access to public
-  state data.
+* **Распространение конфиденциальных данных out-of-band (за пределами полосы передачи)** -
+  Вы можете распространять конфиденциальные данные вне блокчейна другим организациям,
+  а они могут сверить их хеш с тем, что лежит в блокчейне с помощью 
+  GetPrivateDataHash() API чейнкода. Например, организация, желающая купить у вас актив, 
+  может проверить характеристики актива и ваше право собственности на него, сверив хеш
+  с тем, что лежит в блокчейне - перед тем, как согласиться на покупку.
 
-* **Sharing private data out of band** -
-  As an off-chain option, you could share private data out of band with other
-  organizations, and they can hash the key/value to verify it matches
-  the on-chain hash by using GetPrivateDataHash() chaincode API. For example,
-  an organization that wishes to purchase an asset from you may want to verify
-  an asset's properties and that you are the legitimate owner by checking the
-  on-chain hash, prior to agreeing to the purchase.
+* **Распространение данных в другие коллекции** -
+  Вы можете 'распространить' конфиденциальные данные при помощи чейнкода, который
+  создаст соответствующий ключ/значение в PDC другой организации: передайте конфиденциальные данные
+  в поле `transient`, затем чейнкод может проверить, что переданные данные совпадают с теми, что в блокчейне (через
+  GetPrivateDataHash()), а затем записать данные в PDC другой организации.
 
-* **Sharing private data with other collections** -
-  You could 'share' the private data on-chain with chaincode that creates a matching
-  key/value in the other organization's private data collection. You'd pass the
-  private data key/value to chaincode via transient field, and the chaincode
-  could confirm a hash of the passed private data matches the on-chain hash from
-  your collection using GetPrivateDataHash(), and then write the private data to
-  the other organization's private data collection.
+* **Перенос конфиденциальных данных в PDC другой организакции** -
+  Вы можете 'перенести' конфиденциальные данные при помощи чейнкода, который удалит ключ в вашей коллекции и создаст его в коллекции другой организакции.
+  Чейнкод такой же, что и в предыдущем паттерне, но с удалением ключа в вашем PDC. Чтобы доказать, что транзакция всегда удаляет ключ и добавляет его в другую коллекцию,
+  вы можете потребовать подтверждения от третьей стороны, такой как аудитор или регулятор.
 
-* **Transferring private data to other collections** -
-  You could 'transfer' the private data with chaincode that deletes the private data
-  key in your collection, and creates it in another organization's collection.
-  Again, use the transient field to pass the private data upon chaincode invoke,
-  and in the chaincode use GetPrivateDataHash() to confirm that the data exists in
-  your private data collection, before deleting the key from your collection and
-  creating the key in another organization's collection. To ensure that a
-  transaction always deletes from one collection and adds to another collection,
-  you may want to require endorsements from additional parties, such as a
-  regulator or auditor.
+* **Использование конфиденциальных данных для получения согласия о транзакции**
+  Если вы хотите согласии о проведении транзакции второй стороны до того как транзакция совершена
+  (например, запись в блокчейне, что они соглашаются купить актив за определенную цену),
+  тогда чейнкод может потребовать от них заранее согласиться с транзакцией, записав
+  некий конфиденциальный ключ в их PDC или ваш PDC, который потом будет проверен чейнкодом через
+  GetPrivateDataHash(). Фактически, ровно такой же механим использует встроенная система жизненного цикла чейнкода, 
+  чтобы убедиться, что организации согласились с определением чейнкода до того, как он сохранен в канал.
+  Начиная с Fabric v2.0, этот паттерн становится еще более эффективным с политиками подтверждения на уровне коллекции,
+  с помощью которых можно убедиться, что чейнкод был выполнен и одобрен на пире владельца коллекции.
+  Как вариант, может использоваться взаимносогласованный ключ с политикой подтверждения на уровне ключа, который обновляется по условиям преждевременного согласия и
+  подтверждается пирами нужных организаций.
 
-* **Using private data for transaction approval** -
-  If you want to get a counterparty's approval for a transaction before it is
-  completed (e.g. an on-chain record that they agree to purchase an asset for
-  a certain price), the chaincode can require them to 'pre-approve' the transaction,
-  by either writing a private key to their private data collection or your collection,
-  which the chaincode will then check using GetPrivateDataHash(). In fact, this is
-  exactly the same mechanism that the built-in lifecycle system chaincode uses to
-  ensure organizations agree to a chaincode definition before it is committed to
-  a channel. Starting with Fabric v2.0, this pattern
-  becomes more powerful with collection-level endorsement policies, to ensure
-  that the chaincode is executed and endorsed on the collection owner's own trusted
-  peer. Alternatively, a mutually agreed key with a key-level endorsement policy
-  could be used, that is then updated with the pre-approval terms and endorsed
-  on peers from the required organizations.
+* **Хранение сторон транзакции в тайне** -
+  Вариации предыдущего паттерна могут использоваться, чтобы предотвратить утечку сторон транзакции.
+  Например, покупатель указывает свое согласие на покупку в своей коллекции,
+  а в последующей транзакции продавец упоминает конфиденциальные данные покупателя в своей PDC.
+  Доказательство транзакции и с хешированными упоминаниями хранится в блокчейне, только
+  покупатель и продавец знают, что они стороны транзакции, но они могут доказать это третьей стороне
+  в другой транзакции, которая может проверить их хеши.
 
-* **Keeping transactors private** -
-  Variations of the prior pattern can also eliminate leaking the transactors for a given
-  transaction. For example a buyer indicates agreement to buy on their own collection,
-  then in a subsequent transaction seller references the buyer's private data in
-  their own private data collection. The proof of transaction with hashed references
-  is recorded on-chain, only the buyer and seller know that they are the transactors,
-  but they can reveal the pre-images if a need-to-know arises, such as in a subsequent
-  transaction with another party who could verify the hashes.
+Заметьте, что, используя паттерны выше, конфиденциальные данные можно контролировать также, как и обычные данные состояния канала:
 
-Coupled with the patterns above, it is worth noting that transactions with private
-data can be bound to the same conditions as regular channel state data, specifically:
+* **Контроль доступа на уровне ключа** -
+  Вы можете внести удостоверение вашего права на собственность как часть значения из PDC,
+  так, что последующие транзакции могут проверить, что инициатор имеет право распространять или переносить данные.
+  В этом случае чейнкод получит удостоверения инициатора (через GetCreator() API чейнкода или CID (client identity)
+  library API GetID() или GetMSPID()), объединит его с другими конфиденциальными данными, переданными в чейнкод,
+  и сверит хеш получившихся данных и проверит, что он сходится с тем, что лежит в блокчейне (через GetPrivateDataHash()).
 
-* **Key level transaction access control** -
-  You can include ownership credentials in a private data value, so that subsequent
-  transactions can verify that the submitter has ownership privilege to share or transfer
-  the data. In this case the chaincode would get the submitter's credentials
-  (e.g. using GetCreator() chaincode API or CID library API GetID() or GetMSPID() ),
-  combine it with other private data that gets passed to the chaincode, hash it,
-  and use GetPrivateDataHash() to verify that it matches the on-chain hash before
-  proceeding with the transaction.
+* **Политики подтверждения на уровне ключа** -
+  Как и с обычными данными канала, вы можете установить политику подтверждения на уровне ключа, чтобы установить,
+  какие организации должны подтвердить транзакции, распространяющие или переносящие конфиденциальные данные, используя
+  SetPrivateDataValidationParameter() API чейнкода.
 
-* **Key level endorsement policies** -
-  And also as with normal channel state data, you can use state-based endorsement
-  to specify which organizations must endorse transactions that share or transfer
-  private data, using SetPrivateDataValidationParameter() chaincode API,
-  for example to specify that only an owner's organization peer, custodian's organization
-  peer, or other third party must endorse such transactions.
+### Пример сценария: передача актива с использованием PDC
 
-### Example scenario: Asset transfer using private data collections
+Паттерны распространения конфиденциальных данных могут быть объединены, чтобы создать
+мощные приложения на основе чейнкода. Например, рассмотрим, как сценарий передачи актива
+может быть реализован с помощью внутриорганизационных PDC:
 
-The private data sharing patterns mentioned above can be combined to enable powerful
-chaincode-based applications. For example, consider how an asset transfer scenario
-could be implemented using per-organization private data collections:
+* Актив может быть представлен открытым ключом UUID. Открыто хранится только информация о владельце актива, больше ничего не известно.
 
-* An asset may be tracked by a UUID key in public chaincode state. Only the asset's
-  ownership is recorded, nothing else is known about the asset.
+* Чейнкод потребует, чтобы запрос о передаче актива исходил от клиента, владеющего активом, а изменение информации об активе должно быть подтверждено организацией регулятора и организацией владельца,
+  что регулируется через политики подтверждения на уровне ключа.
 
-* The chaincode will require that any transfer request must originate from the owning client,
-  and the key is bound by state-based endorsement requiring that a peer from the
-  owner's organization and a regulator's organization must endorse any transfer requests.
+* Конфиденциальные детали актива хранятся в PDC владельца по ключу - хеш от UUID.
+  Другие организации и ордеринг-служба будут видеть только хеш деталей актива.
 
-* The asset owner's private data collection contains the private details about
-  the asset, keyed by a hash of the UUID. Other organizations and the ordering
-  service will only see a hash of the asset details.
+* Давайте предположим, что регулятор - участник каждой коллекции, и, следовательно, хранит конфиденциальные данные, хотя это не требуется.
 
-* Let's assume the regulator is a member of each collection as well, and therefore
-  persists the private data, although this need not be the case.
+Транзакция по заключению сделки будет проходить так:
 
-A transaction to trade the asset would unfold as follows:
+1. Вне блокчейна, продавец и потенциальный покупатель заключают сделку по покупке актива за определенную цену.
 
-1. Off-chain, the owner and a potential buyer strike a deal to trade the asset
-   for a certain price.
+2. Продавец предоставляет доказательство владения активом, или передав конфиденциальные детали вне блокчейна, или предоставив покупателю
+   права на чтение данных на узле продавца или регулятора.
 
-2. The seller provides proof of their ownership, by either passing the private details
-   out of band, or by providing the buyer with credentials to query the private
-   data on their node or the regulator's node.
+3. Покупатель сверяет хеш конфиденциальных данных с тем, что лежит на блокчейне.
 
-3. Buyer verifies a hash of the private details matches the on-chain public hash.
+4. Покупатель вызывает чейнкод, чтобы записать детали торгов в своей PDC.
+   Чейнкод вызывается на пире покупателя и, возможно, на пире регулятора, если того требует политика подтверждения.
 
-4. The buyer invokes chaincode to record their bid details in their own private data collection.
-   The chaincode is invoked on buyer's peer, and potentially on regulator's peer if required
-   by the collection endorsement policy.
+5. Текущий владелец (продавец) вызывает чейнкод для продажи и передачи актива, и передает чейнкоду конфиденциальные детали и информацию о торгах.
+   Чейнкод вызывается на пирах продавца, покупателя и регулятора, для того, чтобы удовлетворить политику подтверждения обновления открытого состояния, 
+   и политики подтверждения PDC покупателя и PDC продавца.
 
-5. The current owner (seller) invokes chaincode to sell and transfer the asset, passing in the
-   private details and bid information. The chaincode is invoked on peers of the
-   seller, buyer, and regulator, in order to meet the endorsement policy of the public
-   key, as well as the endorsement policies of the buyer and seller private data collections.
+6. Чейнкод проверяет, что инициирующий его клиент - владелец, проверяет конфиденциальные детали по хешу из коллекции продавца,
+   и проверяет детали торгов по хешу из коллекции покупателя. Затем чейнкод обновляет открытые состояния актива - устанавливает покупателя как владельца и политику подтверждения
+   на покупающую организацию и регулятора, записывает конфиденциальные детали в PDC покупателя и, возможно, удаляет конфиденциальные детали из коллекции продавца.
+   Перед финальным подтверждением, подтверждающие пиры проверяют, что конфиденциальные данные распространены на все авторизованные пиры продавца и регулятора.
 
-6. The chaincode verifies that the submitting client is the owner, verifies the private
-   details against the hash in the seller's collection, and verifies the bid details
-   against the hash in the buyer's collection. The chaincode then writes the proposed
-   updates for the public key (setting ownership to the buyer, and setting endorsement
-   policy to be the buying organization and regulator), writes the private details to the
-   buyer's private data collection, and potentially deletes the private details from seller's
-   collection. Prior to final endorsement, the endorsing peers ensure private data is
-   disseminated to any other authorized peers of the seller and regulator.
+7. Продавец подает транзакцию с открытыми данными хешем конфиденциальных на ордеринг, после чего блок с транзакцией распределяется на все пиры канала.
 
-7. The seller submits the transaction with the public data and private data hashes
-   for ordering, and it is distributed to all channel peers in a block.
+8. Каждый пир проверит, что политика подтверждения была удовлетворена (имеются подтверждения от продавца, покупателя и регулятора) 
+   и что со времени выполнения чейнкода ни открытые, ни конфиденциальные данные не были изменены какой-либо другой транзакцией.
 
-8. Each peer's block validation logic will consistently verify the endorsement policy
-   was met (buyer, seller, regulator all endorsed), and verify that public and private
-   state that was read in the chaincode has not been modified by any other transaction
-   since chaincode execution.
+9. Все пиры сохранят транзакцию как валидную, так как она прошла все проверки.
+   Пиры покупателя и регулятора получат конфиденциальные данные от других авторизованных пиров, так как они не получили их во время подтверждения,
+   и сохранят их в свои private data state database (если хеш конфиденциальных данных сходится с хешем из транзакции).
 
-9. All peers commit the transaction as valid since it passed validation checks.
-   Buyer peers and regulator peers retrieve the private data from other authorized
-   peers if they did not receive it at endorsement time, and persist the private
-   data in their private data state database (assuming the private data matched
-   the hashes from the transaction).
+10. С завершением транзакции актив был передан, и все другие участники канала, заинтересованные в нем, смогут посмотреть историю открытого состояния актива, чтобы понять его происхождение.
+    Они не смогут получить доступ ни к каким конфиденциальным данным, если только владелец не передаст их им.
 
-10. With the transaction completed, the asset has been transferred, and other
-    channel members interested in the asset may query the history of the public
-    key to understand its provenance, but will not have access to any private
-    details unless an owner shares it on a need-to-know basis.
+Такой сценарий может быть расширен, например, чейнкод передачи может проверить, что 
+банк выписал аккредетив (денежный документ, содержащий распоряжение об оплате суммы),
+перед передачей актива. Также участники транзакции могут не иметь своих пиров, а проводить транзакцию через
+доверенные организации.
 
-The basic asset transfer scenario could be extended for other considerations,
-for example the transfer chaincode could verify that a payment record is available
-to satisfy payment versus delivery requirements, or verify that a bank has
-submitted a letter of credit, prior to the execution of the transfer chaincode.
-And instead of transactors directly hosting peers, they could transact through
-custodian organizations who are running peers.
+## Чистка конфиденциальных данных
 
-## Purging private data
+В случае очень важных конфиденциальных данных, даже при использовании PDC организации могут захотеть
+--- или этого может требовать государственное регулирование --- периодически чистить данные
+с пиров, оставляя хеш данных в блокчейне как неизменяемое доказательство этих конфиденциальных данных.
 
-For very sensitive data, even the parties sharing the private data might want
---- or might be required by government regulations --- to periodically "purge" the data
-on their peers, leaving behind a hash of the data on the blockchain
-to serve as immutable evidence of the private data.
+В некоторых случаях, конфиденциальные данные должны существовать у пира только до того, как они будут перенесены во
+внешнюю базу данных. Данные также могут быть необходимы только до завершения какого бизнесс-процесса (
+(завершение сделки, исполнение контракта и т.д.).
 
-In some of these cases, the private data only needs to exist on the peer's private
-database until it can be replicated into a database external to the peer's
-blockchain. The data might also only need to exist on the peers until a chaincode business
-process is done with it (trade settled, contract fulfilled, etc).
+Для поддержки этих сценариев использования, конфиденциальные данные могут быть удалены, если они не были изменены
+на протяжении настраиваемого числа блоков. Такие данные не могут быть использованы чейнкодом и недоступны пирам.
 
-To support these use cases, private data can be purged if it has not been modified
-for a configurable number of blocks. Purged private data cannot be queried from chaincode,
-and is not available to other requesting peers.
+## Как определить PDC
 
-## How a private data collection is defined
-
-For more details on collection definitions, and other low level information about
-private data and collections, refer to the [private data reference topic](../private-data-arch.html).
+Для подробного описания того, как определить PDC и другой низкоуровневой информации про конфиденциальные данные и их коллекции, обратитесь к этому
+[документу](../private-data-arch.html).
 
 <!--- Licensed under Creative Commons Attribution 4.0 International License
 https://creativecommons.org/licenses/by/4.0/ -->
