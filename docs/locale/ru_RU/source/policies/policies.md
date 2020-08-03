@@ -7,10 +7,10 @@
 
 * [Что такое политика](#что-такое-политика)
 * [Зачем нужны политики](#зачем-нужны-политики)
-* [How are policies implemented throughout Fabric](#how-are-policies-implemented-throughout-fabric)
-* [Fabric policy domains](#the-fabric-policy-domains)
-* [How do you write a policy in Fabric](#how-do-you-write-a-policy-in-fabric)
-* [Fabric chaincode lifecycle](#fabric-chaincode-lifecycle)шл
+* [Как политики реализованы в Fabric](#как-политики-реализованы-в-fabric)
+* [Области политик Fabric](#области-политик-Fabric)
+* [Как написать политику в Fabric](#как-написать-политику-в-fabric)
+* [Fabric chaincode lifecycle](#fabric-chaincode-lifecycle)
 * [Overriding policy definitions](#overriding-policy-definitions)
 
 ## Что такое политика?
@@ -173,16 +173,13 @@ peer/ChaincodeToChaincode: /Channel/Application/Readers
 
 ### Политики типа ImplicitMeta
 
-Политики `ImplicitMeta` допустимы только в контексте конфигурации канала, основанной на многоуровневой иерархии политики в дереве конфигураций. Политики ImplicitMeta объединяют в себе результат политик, расположенных глубже в конфигурационном дереве, определенных
-policies are only valid in the context of channel configuration
-which is based on a tiered hierarchy of policies in a configuration tree. 
-policies aggregate the result of policies deeper in the configuration tree that
-are ultimately defined by Signature policies. They are `Implicit` because they
-are constructed implicitly based on the current organizations in the
-channel configuration, and they are `Meta` because their evaluation is not
-against specific MSP principals, but rather against other sub-policies below
-them in the configuration tree.
+Политики `ImplicitMeta` допустимы только в контексте конфигурации канала, основанной на 
+многоуровневой иерархии политики в дереве конфигураций. Политики ImplicitMeta объединяют в себе 
+результат политик, расположенных глубже в конфигурационном дереве, определенных политикой 
+Signature. Политики называются `Implicit`, поскольку они неявно строятся на основе существующих оганизаций в конфигурации канала, а `Meta`, поскольку они зависят не от конкретных MSP principals, а другими политиками, находящимися ниже их в конфигруационном дереве.
 
+Нижеприведенная диаграмма иллюстрирует многоуровневую структуру канала и показывет, как политика
+`ImplicitMeta` администраторов конфигурации канала, `/Channel/Admins`
 The following diagram illustrates the tiered policy structure for an application
 channel and shows how the `ImplicitMeta` channel configuration admins policy,
 named `/Channel/Admins`, is resolved when the sub-policies named `Admins` below it
@@ -191,8 +188,7 @@ the conditions of the sub-policy were satisfied.
 
 ![policies.policies](./FabricPolicyHierarchy-6.png)
 
-As you can see in the diagram above, `ImplicitMeta` policies, Type = 3, use a
-different syntax, `"<ANY|ALL|MAJORITY> <SubPolicyName>"`, for example:
+Как можно видеть на диаграмме выше, политики `ImplicitMeta`, Type = 3, используют другой синтаксис, `"<ANY|ALL|MAJORITY> <SubPolicyName>"`, например:
 ```
 `MAJORITY sub policy: Admins`
 ```
