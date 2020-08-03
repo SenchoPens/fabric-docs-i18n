@@ -40,7 +40,7 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
 - [ ] Release notes
 - [ ] Key Concepts
     - [x] Introduction (edited)
-    - [ ] Hyperledger Fabric Model
+    - [x] Hyperledger Fabric Model
     - [ ] Blockchain network
     - [x] Identity (edited)
     - [ ] Membership Service Provider (MSP)
@@ -64,9 +64,9 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
     - [x] Channel Configuration (configtx)
     - [x] Endorsement policies
     - [x] Pluggable transaction endorsement and validation
-    - [ ] Access Control Lists (ACL)
-    - [ ] MSP Implementation with Identity Mixer
-    - [ ] Identity Mixer MSP configuration generator (idemixgen)
+    - [x] Access Control Lists (ACL)
+    - [x] MSP Implementation with Identity Mixer
+    - [x] Identity Mixer MSP configuration generator (idemixgen)
     - [ ] The Operations Service
     - [x] Metrics Reference
     - [ ] External Builders and Launchers
