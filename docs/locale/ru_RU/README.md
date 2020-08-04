@@ -67,13 +67,13 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
     - [x] Access Control Lists (ACL)
     - [x] MSP Implementation with Identity Mixer
     - [x] Identity Mixer MSP configuration generator (idemixgen)
-    - [ ] The Operations Service
+    - [x] The Operations Service
     - [x] Metrics Reference
-    - [ ] External Builders and Launchers
-    - [ ] Chaincode as an external service
+    - [x] External Builders and Launchers
+    - [x] Chaincode as an external service
     - [x] Error handling
     - [x] Logging Control
-    - [ ] Securing Communication With Transport Layer Security (TLS)
+    - [x] Securing Communication With Transport Layer Security (TLS)
     - [ ] Configuring and operating a Raft ordering service
     - [ ] Migrating from Kafka to Raft
     - [ ] Bringing up a Kafka-based Ordering Service
