@@ -236,60 +236,52 @@ C1 -- ее должна добавить либо R1, либо R2.
 
 ## Пиры и реестры
 
-Let's now start to use the channel to connect the blockchain network and the
-organizational components together. In the next stage of network development, we
-can see that our network N has just acquired two new components, namely a peer
-node P1 and a ledger instance, L1.
+Теперь давайте начнем использовать канал для объединения блокчейн-сети и организационных 
+компонентов воедино. На следующем шаге развития сети, мы увидим, что в нашей сети N появились 
+два новых компонента -- узел пира P1 и копия реестра L1.
 
 ![network.peersledger](./network.diagram.5.png)
 
-*A peer node P1 has joined the channel C1. P1 physically hosts a copy of the
-ledger L1. P1 and O4 can communicate with each other using channel C1.*
+*Узел пира P1 только что присоединился к каналу C1. P1 физически хранит копию реестра L1. P1 и 
+O4 могут общаться друг с другом с помощью канала C1.*
 
-Peer nodes are the network components where copies of the blockchain ledger are
-hosted!  At last, we're starting to see some recognizable blockchain components!
-P1's purpose in the network is purely to host a copy of the ledger L1 for others
-to access. We can think of L1 as being **physically hosted** on P1, but
-**logically hosted** on the channel C1. We'll see this idea more clearly when we
-add more peers to the channel.
+Узлы пира -- это компоненты сети, где хранятся копии блокчейн-реестра! Наконец появились 
+узнаваемые элементы блокчейна! Целью P1 является хранение копии реестра для других 
+пользователей. Мы можем представлять, что L1 **физически хранится** у P1, но **логически 
+хранится** в канале C1. Мы поймем эту идею, когда добавим больше пиров в канал.
 
-A key part of a P1's configuration is an X.509 identity issued by CA1 which
-associates P1 with organization R1. When R1 administrator takes the
-action of joining peer P1 to channel C1, and the peer starts pulling blocks from
-the orderer O4, the orderer uses the channel configuration
-CC1 to determine P1's permissions on this channel. For example, policy in CC1
-determines whether P1 (or the organization R1) can read and/or write on the
-channel C1.
+Ключевой частью конфигурации P1 является identity X.509, выданный CA1, который связывает P1 с 
+организацией R1. Когда администратор R1 включает пира P1 в канал C1 и пир начинает загружать 
+блоки с ordering-службы O4, ordering-служба использует конфигурацию канала CC1 для определения 
+прав P1 на этом канале. Например, политика в CC1 определяет, может ли P1 (организация R1) читать 
+и/или записывать в канал C1.
 
-Notice how peers are joined to channels by the organizations that own them, and
-though we've only added one peer, we'll see how  there can be multiple peer
-nodes on multiple channels within the network. We'll see the different roles
-that peers can take on a little later.
+Заметьте, что пиров в каналы добавляют организации, владеющие ими, и хотя мы добавили лишь 
+одного пира, позже мы увидим, как в одной сети могут сосуществовать несколько узлов пиров. Мы 
+также увидим различные роли, которые пиры могут брать на себя.
 
-## Applications and Smart Contract chaincode
+## Приложения и чейнкоды смарт-контрактов
 
-Now that the channel C1 has a ledger on it, we can start connecting client
-applications to consume some of the services provided by workhorse of the
-ledger, the peer!
+Теперь, когда канал C1 имеет реестр, мы можем начать присоединять клиентские приложения, чтобы 
+начать потреблять некоторые из услуг, предоставляемых рабочей лошадкой реестра, пиром.
 
-Notice how the network has grown:
+Заметьте, как выросла сеть:
 
 ![network.appsmartcontract](./network.diagram.6.png)
 
-*A smart contract S5 has been installed onto P1.  Client application A1 in
-organization R1 can use S5 to access the ledger via peer node P1. A1, P1 and
-O4 are all joined to channel C1, i.e. they can all make use of the
-communication facilities provided by that channel.*
+*У P1 был установлен смарт-контракт S5. Клиентское приложение A1 организации R1 может 
+использовать S5 для доступа в реестр через узел пира P1. A1, P1 и O4 все присоеденены к каналу 
+C1, то есть они все могут пользоваться средствами связи, предоставляемыми этим каналом.*
 
-In the next stage of network development, we can see that client application A1
-can use channel C1 to connect to specific network resources -- in this case A1
-can connect to both peer node P1 and orderer node O4. Again, see how channels
-are central to the communication between network and organization components.
-Just like peers and orderers, a client application will have an identity that
-associates it with an organization.  In our example, client application A1 is
-associated with organization R1; and although it is outside the Fabric
-blockchain network, it is connected to it via the channel C1.
+На следующей стадии развития сети мы можем видеть, что клиентское приложение A1 может 
+использовать канал C1 для соединения с специальными ресурсами сети -- в нашем случае A1 может 
+подключиться как к узлу пира P1, так и к узлу ordering-службы. Опять же, обратите на главную 
+роль каналов в связи между компонентами сети и компонентами организаций. Так же как пиры и 
+ordering-службы, клиентские приложения будут иметь identity, привязанную к организации. В нашем 
+случае, клиентское приложение A1 привязано к организации R1; и хотя находится за пределами 
+блокчейн-сети Fabric, оно подключено к нему через канал C1.
 
+Сейчас может показаться, что A1 может получить доступ к реестру L1 напрямую через P1, однако на самом деле доступ управляется через специальную программу, называемую чейнкодом смарт-контрактом, S5. 
 It might now appear that A1 can access the ledger L1 directly via P1, but in
 fact, all access is managed via a special program called a smart contract
 chaincode, S5. Think of S5 as defining all the common access patterns to the
