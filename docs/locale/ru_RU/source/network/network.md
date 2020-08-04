@@ -1,283 +1,240 @@
-# Blockchain network
+# Блокчейн-сеть
 
-This topic will describe, **at a conceptual level**, how Hyperledger Fabric
-allows organizations to collaborate in the formation of blockchain networks.  If
-you're an architect, administrator or developer, you can use this topic to get a
-solid understanding of the major structure and process components in a
-Hyperledger Fabric blockchain network. This topic will use a manageable worked
-example that introduces all of the major components in a blockchain network.
+Этот раздел **на уровне ключевых идей** описывает, как Hyperledger Fabric позволяет
+организациям сотрудничать в создании сетей блокчейн. Если вы архитектор, администратор или 
+разработчик, этот раздел поможет вам сформировать глубокое понимание основных элементов 
+структуры и процесса блокчейн-сети Hyperledger Fabric. В рамках этой темы будет использоваться 
+управляемый рабочий пример, в котором будут представлены все основные компоненты блокчейн-сети.
 
-After reading this topic and understanding the concept of policies, you will
-have a solid understanding of the decisions that organizations need to make to
-establish the policies that control a deployed Hyperledger Fabric network.
-You'll also understand how organizations manage network evolution using
-declarative policies -- a key feature of Hyperledger Fabric. In a nutshell,
-you'll understand the major technical components of Hyperledger Fabric and the
-decisions organizations need to make about them.
+После прочтения этого раздела и формирования понимания идей политик, вы будете иметь четкое 
+представление о принимаемых организациями решениях, нужных для установления политики, 
+управляющей запученную сеть Hyperledger Fabric. Вы также поймете, как организации управляют 
+развитием сети с помощью дакларативной политики -- это является, ключевым отличием Hyperledger 
+Fabric. Одним словом, вы поймете большинство технических компонентов Hyperledger Fabric и 
+решения, которые должны быть приняты организациями по этим компонентам. 
 
-## What is a blockchain network?
+## Что такое блокчейн-сеть?
 
-A blockchain network is a technical infrastructure that provides ledger and
-smart contract (chaincode) services to applications. Primarily, smart contracts
-are used to generate transactions which are subsequently distributed to every
-peer node in the network where they are immutably recorded on their copy of the
-ledger. The users of applications might be end users using client applications
-or blockchain network administrators.
+Блокчейн сеть -- это инфраструктура, предоставляющая приложениям реестр и смарт-контракты 
+(чейнкоды). Прежде всего, смарт-контракты используются для генерации транзакций, которые 
+распространяются по сети и записываются в копию реестра всех узлов пиров в сети. Пользователи 
+приложения могут быть конечными пользователями, использующими клиентские приложения или 
+администраторами блокчейн-сети.
 
-In most cases, multiple [organizations](../glossary.html#organization) come
-together as a [consortium](../glossary.html#consortium) to form the network and
-their permissions are determined by a set of [policies](../glossary.html#policy)
-that are agreed by the consortium when the network is originally configured.
-Moreover, network policies can change over time subject to the agreement of the
-organizations in the consortium, as we'll discover when we discuss the concept
-of *modification policy*.
+В большинстве случаев, некоторое количество [организаций](../glossary.html#organization) 
+формируют [консорциум](../glossary.html#consortium) для создания сети и их разрешения 
+определяются набором [политик](../glossary.html#policy), при настройке сети принятых
+консорциумом. Более того, политики сети могут со временем меняться, если организации 
+консорциума соглашаются с изменением, позже мы обсудим идею *политику изменений*.
 
-## The sample network
+## Пример сети
 
-Before we start, let's show you what we're aiming at! Here's a diagram
-representing the **final state** of our sample network.
+Перед тем как начать, давайте поймем, к чему мы стремимся! Здесь приведена диаграмма, 
+показывающая **окончательный вид** примера сети.
 
-Don't worry that this might look complicated! As we go through this topic, we
-will build up the network piece by piece, so that you see how the organizations
-R1, R2, R3 and R4 contribute infrastructure to the network to help form it. This
-infrastructure implements the blockchain network, and it is governed by policies
-agreed by the organizations who form the network -- for example, who can add new
-organizations. You'll discover how applications consume the ledger and smart
-contract services provided by the blockchain network.
+Не переживайте, если она покажется вам сложной! По мере обсуждения этой темы, мы шаг за шагом 
+построим сеть так, что вы увидели, как организации R1, R2, R3 и R4 способствуют развитию 
+инфраструктуры сети, чтобы помочь сформировать ее. Эта инфраструктура обеспечивает 
+функционирование блокчейн-сети и регулируется политикой, согласованной входящими в нее 
+организациями -- например, кто может добавлять новые организации. Вы узнаете, как приложения 
+используют реестры и смарт-контракты, предоставляемые блокчейн-сетью.
 
 ![network.structure](./network.diagram.1.png)
 
-*Four organizations, R1, R2, R3 and R4 have jointly decided, and written into an
-agreement, that they will set up and exploit a Hyperledger Fabric
-network. R4 has been assigned to be the network initiator  -- it has been given
-the power to set up the initial version of the network. R4 has no intention to
-perform business transactions on the network. R1 and R2 have a need for a
-private communications within the overall network, as do R2 and R3.
-Organization R1 has a client application that can perform business transactions
-within channel C1. Organization R2 has a client application that can do similar
-work both in channel C1 and C2. Organization R3 has a client application that
-can do this on channel C2. Peer node P1 maintains a copy of the ledger L1
-associated with C1. Peer node P2 maintains a copy of the ledger L1 associated
-with C1 and a copy of ledger L2 associated with C2. Peer node P3 maintains a
-copy of the ledger L2 associated with C2. The network is governed according to
-policy rules specified in network configuration NC4, the network is under the
-control of organizations R1 and R4. Channel C1 is governed according to the
-policy rules specified in channel configuration CC1; the channel is under the
-control of organizations R1 and R2.  Channel C2 is governed according to the
-policy rules specified in channel configuration CC2; the channel is under the
-control of organizations R2 and R3. There is an ordering service O4 that
-services as a network administration point for N, and uses the system channel.
-The ordering service also supports application channels C1 and C2, for the
-purposes of transaction ordering into blocks for distribution. Each of the four
-organizations has a preferred Certificate Authority.*
+*Четыре организации, R1, R2, R3 и R4, вместе решили и подписали соглашение, что вместе создадут 
+и будут эксплуатировать сеть Hyperledger Fabric. R4 был выдвинут в качестве инициатора сети -- 
+ему были предоставлены полномочия на создание начальной версии сети. R4 не собирается 
+осуществлять бизнес-транзакции в сети. R1 и R2 нуждаются в конфиденциальной связи в рамках 
+общей сети, также как и R2 с R3. У организации R1 есть клиентское приложение, которможет 
+осуществлять бизнес-транзакции по каналу C1. У организациц R2 также есть клиентское приложение, 
+которое может осуществлять ту же работу по каналам C1 и C2. У организации R3 есть клиентское 
+приложение, которое может делать эту работу по каналу C2. Узел пира P1 поддерживает копию 
+реестра L1, связанного с C1. Узел пира P2 поддерживает копию реестра L1, связанного с каналом 
+C1, и копию реестра L2, связанную с каналом C2. Управление сетью осуществляется в соответствии 
+с правилами политик, указанных в конфигурации сети NC4, сеть контролируется организациями R1 и 
+R4. Канал C1 управляется в соответствии с правилами политик, указанных в конфигурации канала 
+CC1; канал контролируется организациями R1 и R2. Канал C2 управляется в соответствии с 
+правилами политик, указанных в конфигурации канала CC2; канал контролируется организациями R2 и 
+R3. Ordering-служба O4 служит пунктом администрирования сети для N и пользуется системным 
+канал. Ordering-служба также поддерживает каналы C1 и C2, в целях проведения ordering 
+транзакций в блоки для дальнейшего распроcтранения. У каждой из четырех организаций есть 
+предпочтительный Certificate Authority (центр сертификации).*
 
-## Creating the Network
+## Создание сети
 
-Let's start at the beginning by creating the basis for the network:
+Начнем с создания основы сети:
 
 ![network.creation](./network.diagram.2.png)
 
-*The network is formed when an orderer is started. In our example network, N,
-the ordering service comprising a single node, O4, is configured according to a
-network configuration NC4, which gives administrative rights to organization
-R4. At the network level, Certificate Authority CA4 is used to dispense
-identities to the administrators and network nodes of the R4 organization.*
+*Сеть создается в момент запуска ordering-службы. В нашем примере, N, ordering-служба, 
+состоящая из одного узла, O4, настроена в соответствии с конфигурацией сети NC4, которая дает 
+права администратора организации R4. На уровне сети, Certificate Authority CA4 используется для 
+выдачи identities администраторам и узлам сети организации R4.*
 
-We can see that the first thing that defines a **network, N,** is an **ordering
-service, O4**. It's helpful to think of the ordering service as the initial
-administration point for the network. As agreed beforehand, O4 is initially
-configured and started by an administrator in organization R4, and hosted in R4.
-The configuration NC4 contains the policies that describe the starting set of
-administrative capabilities for the network. Initially this is set to only give
-R4 rights over the network. This will change, as we'll see later, but for now R4
-is the only member of the network.
+Можно видеть, что **ordering service, O4** -- первое, что определяет **сеть, N,**. Полезно 
+представлять ordering-службу первоначальным административным центром сети. Как было согласовано 
+заранее, O4 изначально настроена и запущена администратором из R4, а также запущена у R4. 
+Конфигурация NC4 содержит политики, описывающие изначальный набор администраторских 
+возможностей. Изначально это набор только дает права над сетью R4. Это изменится позже, но пока 
+R4 -- единственный член сети.
 
 ### Certificate Authorities
 
-You can also see a Certificate Authority, CA4, which is used to issue
-certificates to administrators and network nodes. CA4 plays a key role in our
-network because it dispenses X.509 certificates that can be used to identify
-components as belonging to organization R4. Certificates issued by CAs
-can also be used to sign transactions to indicate that an organization endorses
-the transaction result -- a precondition of it being accepted onto the
-ledger. Let's examine these two aspects of a CA in a little more detail.
+Certificate Authority, CA4, выдает сертификаты администраторам и узлам сети. CA4 играет 
+ключевую роль в нашей сети, поскольку он распространяет сертификаты X.509, которые используются 
+для идентификации компонентов, относящихся к R4. Сертификаты, розданные CA4, могут также 
+использоваться для подписи транзакций, чтобы показать, что организация подтверждает результат 
+транзакции -- предварительное условие включения его в реестр. Давайте рассмотрим оба эти 
+аспекта CA более подробно.
 
-Firstly, different components of the blockchain network use certificates to
-identify themselves to each other as being from a particular organization.
-That's why there is usually more than one CA supporting a blockchain network --
-different organizations often use different CAs. We're going to use four CAs in
-our network; one for each organization. Indeed, CAs are so important that
-Hyperledger Fabric provides you with a built-in one (called *Fabric-CA*) to help
-you get going, though in practice, organizations will choose to use their own
-CA.
+Во-первых, разные компоненты блокчейн-сети испоьзуют сертификаты, чтобы идентифицировать 
+организации друг друга. Поэтому обычно существует несколько CA, поддерживающих блокчейн-сеть -- 
+разные организации обычно используют разные CA. Мы будем использовать четыре CA в нашей сети; 
+по одному на каждую организацию. Действительно, CA насктолько важны, что Hyperledger Fabric 
+предоставляет встроенный (*Fabric-CA*) для помощи вам, хотя на практике организации обычно 
+используют свой собственный CA.
 
-The mapping of certificates to member organizations is achieved by via
-a structure called a
-[Membership Services Provider (MSP)](../glossary.html#membership-services).
-Network configuration NC4 uses a named
-MSP to identify the properties of certificates dispensed by CA4 which associate
-certificate holders with organization R4. NC4 can then use this MSP name in
-policies to grant actors from R4 particular
-rights over network resources. An example of such a policy is to identify the
-administrators in R4 who can add new member organizations to the network. We
-don't show MSPs on these diagrams, as they would just clutter them up, but they
-are very important.
+За сопоставление сертификатов и организаций-членов отвечает структура под названием 
+[Membership Services Provider (MSP)](../glossary.html#membership-services). Конфигурация сети 
+NC4 использует именованное MSP для того, чтобы определить параметры сертификатов, 
+выданных CA4 (CA4 связывает владельцев сертификатов с организацией R4). NC4 использует имя MSP 
+в политиках, чтобы давать участникам R4 доступ к ресурсам сети. Пример такой политики: 
+определить администратора из R4, который может добавлять новые организации в сеть. Мы не будет 
+показывать MSP на диаграммах, так как они только загромодят их, но они очень важны.
 
-Secondly, we'll see later how certificates issued by CAs are at the heart of the
-[transaction](../glossary.html#transaction) generation and validation process.
-Specifically, X.509 certificates are used in client application
-[transaction proposals](../glossary.html#proposal) and smart contract
-[transaction responses](../glossary.html#response) to digitally sign
-[transactions](../glossary.html#transaction).  Subsequently the network nodes
-who host copies of the ledger verify that transaction signatures are valid
-before accepting transactions onto the ledger.
+Во-вторых, мы позже увидим, как выданные CA сертификаты находятся в центре генерации 
+[транзакций](../glossary.html#transaction) и процесс проверки. Сертификаты X.509 используются в
+[транзакционных proposals](../glossary.html#proposal) клиентских приложений и 
+[ответов на транзакцию](../glossary.html#response) смарт-контрактов для цифровой подписи 
+[транзакций](../glossary.html#transaction). Впоследствии узлы сети, хранящие копии реестра, 
+проверяют подписи транзакций на валидность перед занесением транзакций в свой реестр.
 
-Let's recap the basic structure of our example blockchain network. There's a
-resource, the network N, accessed by a set of users defined by a Certificate
-Authority CA4, who have a set of rights over the resources in the network N as
-described by policies contained inside a network configuration NC4.  All of this
-is made real when we configure and start the ordering service node O4.
+Давайте повторим базовую структуру нашего примера блокчейн-сети. В ней есть ресурсы, сеть N, к 
+которой есть доступ у ряда пользователей, определенных Certificate Authority CA4, который имеет 
+набор прав на ресурсы в сети N, что описано в политиках, содержащихся в конфигурации сети NC4.
+Все приходит в действие, когда мы запускаем узел ordering-службы O4.
 
-## Adding Network Administrators
+## Добавление сетевых администраторов
 
-NC4 was initially configured to only allow R4 users administrative rights over
-the network. In this next phase, we are going to allow organization R1 users to
-administer the network. Let's see how the network evolves:
+NC4 изначально был настроен лишь предоставлять пользователям R4 администраторские права в сети.
+На следующем шаге, мы разрешим пользователям организации R1 администрировать сеть. Давайте 
+посмотрим, как развивается сеть:
 
 ![network.admins](./network.diagram.2.1.png)
 
-*Organization R4 updates the network configuration to make organization R1 an
-administrator too.  After this point R1 and R4 have equal rights over the
-network configuration.*
+*Организация R4 обновляет конфигурации сети, чтобы сделать R1 вторым администратором. После 
+этого действия R1 и R4 имеют равные права на настройку сети.*
 
-We see the addition of a new organization R1 as an administrator -- R1 and R4
-now have equal rights over the network. We can also see that certificate
-authority CA1 has been added -- it can be used to identify users from the R1
-organization. After this point, users from both R1 and R4 can administer the
-network.
+Мы видим добавление новой организации R1 в качестве администратора -- R1 и R4 теперь имеют 
+равные права в сети. Мы также можем видеть, что был добавлен certificate authority CA1 -- для 
+идентификации пользователей из R1. С этого момента пользователи и R1, и R4 могут 
+администрировать сеть.
 
-Although the orderer node, O4, is running on R4's infrastructure, R1 has shared
-administrative rights over it, as long as it can gain network access. It means
-that R1 or R4 could update the network configuration NC4 to allow the R2
-organization a subset of network operations.  In this way, even though R4 is
-running the ordering service, and R1 has full administrative rights over it, R2
-has limited rights to create new consortia.
+Хотя узел ordering-службы, O4, работает на инфраструктуре R4, R1 имеет такие же 
+администраторские права на нее. R1 или R4 могут обновить конфигурацию сети NC4 и позволить 
+организации R2 совершать некоторое количество сетевых операций. Тогда, несмотря на то, что R4 
+управляет ordering-службой, а R4 обладает всеми администраторскими правами на него, R2 имеет 
+ограниченные права на создание новых консорциумов. 
 
-In its simplest form, the ordering service is a single node in the network, and
-that's what you can see in the example. Ordering services are usually
-multi-node, and can be configured to have different nodes in different
-organizations. For example, we might run O4 in R4 and connect it to O2, a
-separate orderer node in organization R1.  In this way, we would have a
-multi-site, multi-organization administration structure.
 
-We'll discuss the ordering service a little [later in this topic](#the-ordering-service),
-but for now just think of the ordering service as an administration point which
-provides different organizations controlled access to the network.
+В своей самой простой форме, ordering-служба является одним узлом в сети, и именно это мы видим 
+в примере. Ordering-службы обычно запущена на нескольких узлах сразу и может быть настроена 
+так, чтобы иметь разные узлы в разных организациях. Например, мы можем запустить O4 на R4 и 
+объединить ее с O2, отдельным узлом ordering-службы в организации R1. Таким образом, у нас 
+будет административная структура, включающая несколько сайтов и организаций.
 
-## Defining a Consortium
+Мы обсудим ordering-службу чуть [позже](#the-ordering-service), сейчас давайте представлять 
+ordering-службу, как об административном пункте, предоставляющем разным организациям 
+контролируемый доступ в сеть.
 
-Although the network can now be administered by R1 and R4, there is very little
-that can be done. The first thing we need to do is define a consortium. This
-word literally means "a group with a shared destiny", so it's an appropriate
-choice for a set of organizations in a blockchain network.
+## Создание консорциума
 
-Let's see how a consortium is defined:
+Хотя сеть теперь администрируется R1 и R4, мало что можно сделать. Первое, что нам нужно 
+сделать -- создать консорциум. Это слово буквально означает "группа с общей судьбой" (a group 
+with a shared destiny, а реестр -- shared ledger) -- поэтому это логичный выбор для группы 
+организаций в блокчейн-сети. 
+
+Давайте посмотрим, как создается консорциум:
 
 ![network.consortium](./network.diagram.3.png)
 
-*A network administrator defines a consortium X1 that contains two members,
-the organizations R1 and R2. This consortium definition is stored in the
-network configuration NC4, and will be used at the next stage of network
-development. CA1 and CA2 are the respective Certificate Authorities for these
-organizations.*
+*Сетевой администратор создает консорциум Х1, состоящий из двух членов -- организаций R1 и R2. 
+Определение этого консорциума хранится в конфигурации сети NC4 и будет использовано на 
+следующем шаге развития сети. CA1 и CA2 -- доверенные Certificate Authorities этих 
+организаций.*
 
-Because of the way NC4 is configured, only R1 or R4 can create new consortia.
-This diagram shows the addition of a new consortium, X1, which defines R1 and R2
-as its constituting organizations.  We can also see that CA2 has been added to
-identify users from R2. Note that a consortium can have any number of
-organizational members -- we have just shown two as it is the simplest
-configuration.
+Из-за определенной настройки NC4 только R1 и R4 могут создавать новые консорциумы. Это схема 
+показывает добавление нового консорциума, X1, который определяет R1 и R2 в качестве 
+организаций, образующих его. Мы также можум видеть, что CA2 был добавлен для идентификации 
+пользователей из R2. Заметьте, что консорциум может состоять из скольки угодно членов -- мы 
+приводим двух членов в качестве простейшей конфигурации.
 
-Why are consortia important? We can see that a consortium defines the set of
-organizations in the network who share a need to **transact** with one another --
-in this case R1 and R2. It really makes sense to group organizations together if
-they have a common goal, and that's exactly what's happening.
+Почему консорциум важен? Мы можем видеть, что консорциум определяет набор организаций в сети, 
+которым нужно осуществлять **транзакции** друг с другом -- в нашем случае R1 и R2. Действительно 
+имеет смысл группировать организации, имеющие общие цели, и это именно то, что мы делаем.
 
-The network, although started by a single organization, is now controlled by a
-larger set of organizations.  We could have started it this way, with R1, R2 and
-R4 having shared control, but this build up makes it easier to understand.
+Сеть, которая в начале контролировалась единственной организацией, сейчас контролируется большим 
+набором организаций. Мы могли бы начать с того, что R1, R2 и R4 имеют общий контроль, однако так 
+было проще понять.
 
-We're now going to use consortium X1 to create a really important part of a
-Hyperledger Fabric blockchain -- **a channel**.
+Теперь мы используем консорциум X1 для создания важного элемента блокчейна Hyperledger Fabric -- 
+**канал**.
 
-## Creating a channel for a consortium
+## Создание канала для консорциума
 
-So let's create this key part of the Fabric blockchain network -- **a channel**.
-A channel is a primary communications mechanism by which the members of a
-consortium can communicate with each other. There can be multiple channels in a
-network, but for now, we'll start with one.
+Давайте создадим ключевой элемент блокчейн-сети Fabric -- **канал**. Канал -- это основной 
+механизм связи, с помощью которого члены консорциума могут общаться друг с другом. В сети может 
+быть несколько каналов, но мы начнем с одного. 
 
-Let's see how the first channel has been added to the network:
+Давайте посмотрим, как первый канал добавляется в сеть:
 
 ![network.channel](./network.diagram.4.png)
 
-*A channel C1 has been created for R1 and R2 using the consortium definition X1.
-The channel is governed by a channel configuration CC1, completely separate to
-the network configuration.  CC1 is managed by R1 and R2 who have equal rights
-over C1. R4 has no rights in CC1 whatsoever.*
+*Канал C1 был создан для R1 и R2 с использованием определения консорциума X1. Канал управляется 
+конфигурацией канала CC1, отдельной от конфигурации сети. CC1 управляется R1 и R2, обладающими 
+равными правами над C1. R4 не имеет никаких прав в CC1.*
 
-The channel C1 provides a private communications mechanism for the consortium
-X1. We can see channel C1 has been connected to the ordering service O4 but that
-nothing else is attached to it. In the next stage of network development, we're
-going to connect components such as client applications and peer nodes. But at
-this point, a channel represents the **potential** for future connectivity.
+Канал C1 предоставляет механизмы конфиденциальной коммуникации для консорциума X1. Мы можем 
+видеть, что канал C1 был привязан к ordering-службе O4, но больше ни к чему не привязан. На 
+следующем шаге развития, мы подключим такие компоненты как клиентские приложения и узлы пиров. 
+Но на текущий момент, канал представляет **потенциал** для будующих подключений.
 
-Even though channel C1 is a part of the network N, it is quite distinguishable
-from it. Also notice that organizations R3 and R4 are not in this channel -- it
-is for transaction processing between R1 and R2. In the previous step, we saw
-how R4 could grant R1 permission to create new consortia. It's helpful to
-mention that R4 **also** allowed R1 to create channels! In this diagram, it
-could have been organization R1 or R4 who created a channel C1. Again, note
-that a channel can have any number of organizations connected to it -- we've
-shown two as it's the simplest configuration.
+Хотя канал C1 является частью сети N, он весьма отличен от нее. Также заметим, что организаций 
+R3 и R4 нет в этом канале -- он предназначен лишь для обработки транзакций между R1 и R2. На 
+предыдущем шаге мы видели, как R4 разрешила R1 создавать новые консорциумы. Полезно заметить, 
+что R4 **также** разрешила R1 создавать каналы. На этой схеме канал C1 могла создать как 
+организация R1, так и организация R4. Опять же заметим, что канал может иметь сколько угодно 
+организаций -- мы приводим в пример две организации, так как это проще всего. 
 
-Again, notice how channel C1 has a completely separate configuration, CC1, to
-the network configuration NC4. CC1 contains the policies that govern the
-rights that R1 and R2 have over the channel C1 -- and as we've seen, R3 and
-R4 have no permissions in this channel. R3 and R4 can only interact with C1 if
-they are added by R1 or R2 to the appropriate policy in the channel
-configuration CC1. An example is defining who can add a new organization to the
-channel. Specifically, note that R4 cannot add itself to the channel C1 -- it
-must, and can only, be authorized by R1 or R2.
+Опять же заметим, что у канала C1 есть полностью отдельная от NC4 конфигурация, CC1. CC1 
+содержит политики, управляющие правами, которые R1 и R2 имеют в канале C1 -- как мы знаем, R3 и 
+R4 не имеют доступа в этот канал. R3 и R4 смогут взаимодействовать с C1 только, если их добавит 
+R1 or R2 к соответствующей политике в конфигурации канала CC1. Пример показывает, кто может 
+добавлять новые организации в канал. Важно заметить, что R4 не может добавить саму себя в канал 
+C1 -- ее должна добавить либо R1, либо R2.
 
-Why are channels so important? Channels are useful because they provide a
-mechanism for private communications and private data between the members of a
-consortium. Channels provide privacy from other channels, and from the network.
-Hyperledger Fabric is powerful in this regard, as it allows organizations to
-share infrastructure and keep it private at the same time.  There's no
-contradiction here -- different consortia within the network will have a need
-for different information and processes to be appropriately shared, and channels
-provide an efficient mechanism to do this.  Channels provide an efficient
-sharing of infrastructure while maintaining data and communications privacy.
+Почему каналы так важны? Каналы очень полезны, поскольку они предоставляют механизм для 
+приватной коммуникации и конфиденциальных данных между членами консорциума. Каналы гарантируют 
+конфиденциальность в сети и изолируют данные от других каналов. Сила Hyperledger Fabric состоит 
+в том, что он позволяет иметь общую инфраструктуру, однако при этом оставлять ее 
+конфиденциальной. Здесь нет никакого противоречия -- разные консорциумы в рамках сети могут 
+нуждаться в отдельной информации и отдельных процессах и каналы предоставляют для этого 
+механизмы. Каналы предоставляют эффиктивную распределенную инфраструктуру, но при этом 
+поддерживают конфиденциальность даты и коммуникаций.
 
-We can also see that once a channel has been created, it is in a very real sense
-"free from the network". It is only organizations that are explicitly specified
-in a channel configuration that have any control over it, from this time forward
-into the future. Likewise, any updates to network configuration NC4 from this
-time onwards will have no direct effect on channel configuration CC1; for
-example if consortia definition X1 is changed, it will not affect the members of
-channel C1. Channels are therefore useful because they allow private
-communications between the organizations constituting the channel. Moreover, the
-data in a channel is completely isolated from the rest of the network, including
-other channels.
+Мы также можем видеть, что как только канал создается, он становится "свободным от сети". С 
+этого момента только организации, указанные в конфигурации канала, имеют над ним контроль. 
+Аналогично, любое обновление конфигурации сети NC4 с этого момента не будет воздействовать на 
+конфигурацию канала CC1; например, если если изменится определение консорциума X1, это не 
+повлияет на членов канала C1. Таким образом, каналы полезны, поскольку они предоставляют 
+возможность приватной коммуникации между организациями, состоящими в канале. Более того, данные 
+канала полностью изолированы от остальной сети, включая другие каналы.
 
-As an aside, there is also a special **system channel** defined for use by the
-ordering service.  It behaves in exactly the same way as a regular channel,
-which are sometimes called **application channels** for this reason.  We don't
-normally need to worry about this channel, but we'll discuss a little bit more
-about it [later in this topic](#the-ordering-service).
+Кстати, существует специальный **системный канал** только для ordering-службы. Он ведет себя 
+точно так же как и другие каналы, которые иногда называют **application** каналами (прикладными 
+каналами). Мы обсудим этот канал  [чуть позже](#the-ordering-service).
 
-## Peers and Ledgers
+## Пиры и реестры
 
 Let's now start to use the channel to connect the blockchain network and the
 organizational components together. In the next stage of network development, we
