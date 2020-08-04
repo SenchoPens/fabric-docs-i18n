@@ -281,258 +281,194 @@ ordering-службы, клиентские приложения будут им
 случае, клиентское приложение A1 привязано к организации R1; и хотя находится за пределами 
 блокчейн-сети Fabric, оно подключено к нему через канал C1.
 
-Сейчас может показаться, что A1 может получить доступ к реестру L1 напрямую через P1, однако на самом деле доступ управляется через специальную программу, называемую чейнкодом смарт-контрактом, S5. 
-It might now appear that A1 can access the ledger L1 directly via P1, but in
-fact, all access is managed via a special program called a smart contract
-chaincode, S5. Think of S5 as defining all the common access patterns to the
-ledger; S5 provides a well-defined set of ways by which the ledger L1 can
-be queried or updated. In short, client application A1 has to go through smart
-contract S5 to get to ledger L1!
+Сейчас может показаться, что A1 может получить доступ к реестру L1 напрямую через P1, однако на 
+самом деле доступ осуществляется через специальную программу, называемую чейнкодом смарт-
+контрактом, S5. В принципе, S5 определяет доступ к реестру; S5 предоставляет четко определенный 
+набор способов обновления или запроса реестра L1. Короче говоря, клиентское приложение A1, чтобы 
+добраться до реестра L1 должно пройти через смарт-контракт S5. 
 
-Smart contracts can be created by application developers in each organization to
-implement a business process shared by the consortium members. Smart contracts
-are used to help generate transactions which can be subsequently distributed to
-every node in the network. We'll discuss this idea a little later; it'll be
-easier to understand when the network is bigger. For now, the important thing to
-understand is that to get to this point two operations must have been performed
-on the smart contract; it must have been **installed** on peers, and then
-**defined** on a channel.
+Разработчики приложений организаций могут создавать смарт-контракты для того, чтобы реализовать 
+общий для членов консорциума бизнес-процесс. Смарт-контракты используются для генерации 
+транзакций, которые впоследствии могут быть распределены по узлам в сети. Эту идею мы обсудим 
+позже; она станет понятнее позже, когда сеть станет шире. Сейчас важно понять: чтобы перейти на 
+этот шаг нужно выполнить две операции: смарт-контракт должен быть **установлен** у пира, а также 
+**определен** в канале.
 
-Hyperledger Fabric users often use the terms **smart contract** and
-**chaincode** interchangeably. In general, a smart contract defines the
-**transaction logic** that controls the lifecycle of a business object contained
-in the world state. It is then packaged into a chaincode which is then deployed
-to a blockchain network. Think of smart contracts as governing transactions,
-whereas chaincode governs how smart contracts are packaged for deployment.
+Пользователи Hyperledger Fabric часто используют термины **смарт-контракт** и **чейнкод** как 
+синонимичные понятия. В общих чертах, смарт-контракт определяет  **логику транзакций**, 
+контролирующую жизненный цикл бизнес-объекта из world state. Он (смарт-контракт) упаковывается в 
+чейнкод, который впоследствии разворачивается в блокчейн-сети. Можно сказать, что смарт-
+контракты как бы управляют транзакциями, а чейнкод управляет упаковкой для последующего 
+развертывания смарт-контрактов.
 
-### Installing a chaincode package
+### Установка чейнкод-пакета
 
-After a smart contract S5 has been developed, an administrator in organization
-R1 must create a chaincode package and [install](../glossary.html#install) it
-onto peer node P1. This is a straightforward operation; once completed, P1 has
-full knowledge of S5. Specifically, P1 can see the **implementation** logic of
-S5 -- the program code that it uses to access the ledger L1. We contrast this to
-the S5 **interface** which merely describes the inputs and outputs of S5,
-without regard to its implementation.
+После разработки смарт-контракта S5 администратор организации R1 создает чейнкод-пакет и 
+[устанавливает](../glossary.html#install) его на узел пира P1. После завершения этой операции P1 
+знает все о S5. В частности, P1 видит **реализацию** S5 -- программный код, который S5 
+использует для доступа к реестру L1. **Интерфейс S5**  лишь описывает входные и выходные данные 
+S5, независимо от его реализации.
 
-When an organization has multiple peers in a channel, it can choose the peers
-upon which it installs smart contracts; it does not need to install a smart
-contract on every peer.
+Смарт-контракты не должны быть установлены на каждом пире, поэтому, если у организации есть 
+больше одного пира в канале, она может выбрать тех пиров, у которых будут установлены смарт-
+контракты. 
 
-### Defining a chaincode
+### Определение чейнкода
 
-Although a chaincode is installed on the peers of individual organizations, it
-is governed and operated in the scope of a channel. Each organization needs to
-approve a **chaincode definition**, a set of parameters that establish how a
-chaincode will be used on a channel. An organization must approve a chaincode
-definition in order to use the installed smart contract to query the ledger
-and endorse transactions. In our example, which only has a single peer node P1,
-an administrator in organization R1 must approve a chaincode definition for S5.
+Несмотря на то, что чейнкод установлен на пирах отдельных организаций, он управляется и 
+эксплуатируется в рамках канала. Каждая организация должна одобрить **определение чейнкода** -- 
+набор параметров, который устанавливает, как в канале будет использоваться чейнкод. Организация 
+должна утвердить определение чейнкода, чтобы использовать установленный смарт-контракт для 
+запросов в реестр и подтверждения транзакций. В нашем примере с единственным узлом пира P1 
+администратор организации R1 должен утвердить определение чейнкода для S5.
 
-A sufficient number of organizations need to approve a chaincode definition (A
-majority, by default) before the chaincode definition can be committed to the
-channel and used to interact with the channel ledger. Because the channel only
-has one member, the administrator of R1 can commit the chaincode definition of
-S5 to the channel C1. Once the definition has been committed, S5 can now be
-[invoked](../glossary.html#invoke) by client application A1!
+Для сохранения определения чейнкода в канале и последующего его взаимодействия с реестром канала 
+необходимо одобрения определенного количества организаций (по умолчанию большинства 
+организаций). Поскольку наш канал состоит из одного члена, администратор из R1 может сохранить 
+определение чейнкода S5 в канале C1. После сохранения определения, S5 может 
+[использоваться](../glossary.html#invoke) клиентским приложением A1!
 
-Note that although every component on the channel can now access S5, they are
-not able to see its program logic.  This remains private to those nodes who have
-installed it; in our example that means P1. Conceptually this means that it's
-the smart contract **interface** that is defined and committed to a channel, in
-contrast to the smart contract **implementation** that is installed. To reinforce
-this idea; installing a smart contract shows how we think of it being
-**physically hosted** on a peer, whereas a smart contract that has been defined
-on a channel shows how we consider it **logically hosted** by the channel.
+Заметьте, что хотя все компоненты канала теперь имеют доступ к S5, они не видят его код. Он 
+известен лишь установившим смарт-конктракт узлам; в нашем случае это P1.
+Это означает, что в канале определен и сохранен только **интерфейс** смарт-контракта.
+Еще раз повторим эту идею: установка смартконтракта показывает, как он **физически хранится** на 
+пире; определение смартконтракта на канале показывает, как он **логически хранится** на канале.
 
-### Endorsement policy
+### Политика подтверждения
 
-The most important piece of information supplied within the chaincode definition
-is the [endorsement policy](../glossary.html#endorsement-policy). It describes
-which organizations must approve transactions before they will be accepted by other
-organizations onto their copy of the ledger. In our sample network, transactions
-can only be accepted onto ledger L1 if R1 or R2 endorse them.
+Самой важной информацией в определении чейнкода является 
+[политика подтверждения](../glossary.html#endorsement-policy), содержащая, какие организации 
+должны одобрить транзакцию, прежде чем она будет добавлена в копии реестра. В нашем примере, 
+транзакции принимаются в реестр L1 при наличии подтверждения R1 или R2.
 
-Committing the chaincode definition to the channel places the endorsement policy
-on the channel ledger; it enables it to be accessed by any member of the channel.
-You can read more about endorsement policies in the [transaction flow topic](../txflow.html).
+Сохранение определения чейнкода в канале помещает политику подтверждения в реестр канала; это 
+позволяет любому члену канала получить к ней доступ. Больше про политику подтверждения можно 
+почитать в теме про [транзакционный поток](../txflow.html).
 
-### Invoking a smart contract
+### Вызов смарт-контракта
 
-Once a smart contract has been installed on a peer node and defined on a
-channel it can be [invoked](../glossary.html#invoke) by a client application.
-Client applications do this by sending transaction proposals to peers owned by
-the organizations specified by the smart contract endorsement policy. The
-transaction proposal serves as input to the smart contract, which uses it to
-generate an endorsed transaction response, which is returned by the peer node to
-the client application.
+После установки на узел пира и сохранения определения в канале клиентское приложение может
+[вызвать](../glossary.html#invoke) смарт-контракт, отослав транзакционное proposal пирам 
+организаций, указанных в политике подтверждения смарт-контракта. Proposal транзакции служит 
+входными данными в смарт-контракт, который использует его для генерации подтвержденного ответа 
+на транзакцию, который с помощью узла пира возвращается в клиентское приложение.
 
-It's these transactions responses that are packaged together with the
-transaction proposal to form a fully endorsed transaction, which can be
-distributed to the entire network.  We'll look at this in more detail later  For
-now, it's enough to understand how applications invoke smart contracts to
-generate endorsed transactions.
+Ответы на транзакции группируются вместе с транзакционным proposal и формируют полностью 
+подтвержденную транзакцию, которая впоследствии может быть распространена по всей сети. Мы более 
+детально рассмотрим это позже. Пока достаточно понимать, как приложения вызывают смарт-контракт 
+для генерации подтвержденной транзакции.
 
-By this stage in network development we can see that organization R1 is fully
-participating in the network. Its applications -- starting with A1 -- can access
-the ledger L1 via smart contract S5, to generate transactions that will be
-endorsed by R1, and therefore accepted onto the ledger because they conform to
-the endorsement policy.
+На этой стадии развития сети можно видеть, что организация R1 полностью участвует в сети. 
+Приложения -- пока A1 -- имеют доступ к реестру L1 через смарт-контракт S5 для генерации 
+транзакций, впоследствии подтвержденных R1 и принятых в реестр при соответствии политики 
+подтверждения.
 
-## Network completed
+## Готовая сеть
 
-Recall that our objective was to create a channel for consortium X1 --
-organizations R1 and R2. This next phase of network development sees
-organization R2 add its infrastructure to the network.
+Вспомним, что нашей целью было создание канала для консорциума X1 -- организаций R1 и R2. На 
+следующей стадии развития сети организация R2 добавит свою инфраструктуру в сеть.
 
-Let's see how the network has evolved:
+Посмотрим, как развилась сеть:
 
 ![network.grow](./network.diagram.7.png)
 
-*The network has grown through the addition of infrastructure from
-organization R2. Specifically, R2 has added peer node P2, which hosts a copy of
-ledger L1, and chaincode S5. R2 approves the same chaincode definition as R1.
-P2 has also joined channel C1, as has application A2. A2 and P2 are identified
-using certificates from CA2. All of this means that both applications A1 and A2
-can invoke S5 on C1 either using peer node P1 or P2.*
+*Сеть выросла после добавления инфраструктуры организации R2. R2 добавила узел пира P2, у 
+которого хранится копия реестра L1 и чейнкод S5. R2 одобряет то же определение чейнкода, что и 
+R1. P2 присоединился к каналу C1, так же как и приложение A2. A2 и P2 используют сертификаты 
+CA2. Все это означает, что оба приложения, A1 и A2, могут запустить S5 в C1, используя либо P1, 
+либо P2.*
 
-We can see that organization R2 has added a peer node, P2, on channel C1. P2
-also hosts a copy of the ledger L1 and smart contract S5. We can see that R2 has
-also added client application A2 which can connect to the network via channel
-C1. To achieve this, an administrator in organization R2 has created peer node
-P2 and joined it to channel C1, in the same way as an administrator in R1. The
-administrator also has to approve the same chaincode definition as R1.
+Можно видеть, что организация R2 добавила узел пира, P2, в канал C1. P2
+также хранит копию реестра L1 и смарт-контракт S5. Кроме того, R2 добавила клиентское приложение 
+A2 которое может подключиться к сети по каналу C1. Для этого администратор организации R2 создал 
+узел пира P2 и подключил его к каналу C1, также как администратор организации R1. Администратору 
+нужно одобрить то же определение чейнкода, что и R1.
 
-We have created our first operational network! At this stage in network
-development, we have a channel in which organizations R1 and R2 can fully
-transact with each other. Specifically, this means that applications A1 and A2
-can generate transactions using smart contract S5 and ledger L1 on channel C1.
+Мы только что создали нашу первую сеть! На этой стадии развития сети, у нас есть канал, по 
+которому организации R1 и R2 могут совершать транзакции друг с другом. Это означает, что 
+приложения A1 и A2 могут генерировать транзакции с использованием смарт-контракта S5 и реестра 
+L1 в канале C1.
 
-### Generating and accepting transactions
+### Генерирование и принятие транзакций
 
-In contrast to peer nodes, which always host a copy of the ledger, we see that
-there are two different kinds of peer nodes; those which host smart contracts
-and those which do not. In our network, every peer hosts a copy of the smart
-contract, but in larger networks, there will be many more peer nodes that do not
-host a copy of the smart contract. A peer can only *run* a smart contract if it
-is installed on it, but it can *know* about the interface of a smart contract by
-being connected to a channel.
+Все узлы пиров хранят копии реестра, однако смарт-контракты хранит только часть пиров. В нашей 
+сети каждый пир хранит копию смарт-контракта, но в более широких сетях будет много пиров, у 
+которых не хранится копия смарт-контракта. Пир может *запустить* смарт-контракт, только если он 
+у него установлен, но пир может *знать* интерфейс смарт-контракта, если он подключен к каналу.
 
-You should not think of peer nodes which do not have smart contracts installed
-as being somehow inferior. It's more the case that peer nodes with smart
-contracts have a special power -- to help **generate** transactions. Note that
-all peer nodes can **validate** and subsequently **accept** or **reject**
-transactions onto their copy of the ledger L1. However, only peer nodes with a
-smart contract installed can take part in the process of transaction
-**endorsement** which is central to the generation of valid transactions.
+Однако не думайте, что пиры, у которых не установлены смарт-контракты, чем-то уступают тем 
+пирам, у которых они установлены. Узлы пиров со смарт-контрактами помогают **генерировать** 
+транзакции. Заметьте, что все узлы пиров могут **проверять** и впоследствии **отклонять** или 
+**принимать** транзакции в свою копию реестра L1. Однако только узлы пиров с установленными 
+смарт-контрактами могут принимать участие в **подтверждении** транзакции, что имеет ключевое 
+значение для создания валидных транзакций.
 
-We don't need to worry about the exact details of how transactions are
-generated, distributed and accepted in this topic -- it is sufficient to
-understand that we have a blockchain network where organizations R1 and R2 can
-share information and processes as ledger-captured transactions.  We'll learn a
-lot more about transactions, ledgers, smart contracts in other topics.
+В этом разделе нас не интересуют детали генерации, распространения и принятия транзакций -- 
+достаточно понимать, что у нас есть блокчейн-сеть, в которой организации R1 и R2 обмениваются 
+информацией и процессом транзакций, записываемых в реестр. Мы узнаем больше о транзакциях, 
+реестрах, смарт-контрактах в других разделах.
 
-### Types of peers
+### Виды пиров
 
-In Hyperledger Fabric, while all peers are the same, they can assume multiple
-roles depending on how the network is configured.  We now have enough
-understanding of a typical network topology to describe these roles.
+В Hyperledger Fabric все пиры одинаковы, однако могут играть несколько ролей в зависимости от 
+настройки сети. У нас уже сформировалось понимание топологии обычной сети, нужное для описания 
+этих ролей.
 
-  * [*Committing peer*](../glossary.html#commitment). Every peer node in a
-    channel is a committing peer. It receives blocks of generated transactions,
-    which are subsequently validated before they are committed to the peer
-    node's copy of the ledger as an append operation.
+  * [*Сохраняющий пир*](../glossary.html#commitment). Каждый пир в канале является сохраняющим. Он получает блоки сгенерированных транзакций, которые подтверждаются перед тем, как узел пира сохраняет их в свою копию реестра.
 
-  * [*Endorsing peer*](../glossary.html#endorsement). Every peer with a smart
-    contract *can* be an endorsing peer if it has a smart contract installed.
-    However, to actually *be* an endorsing peer, the smart contract on the peer
-    must be used by a client application to generate a digitally signed
-    transaction response. The term *endorsing peer* is an explicit reference to
-    this fact.
+  * [*Подтверждающий пир*](../glossary.html#endorsement). Каждый пир со смарт-контрактом может быть подтверждающим пиром для этого смарт-контракта. Чтобы быть подтверждающим пиром, смарт-контракт пира должен использоваться клиентским приложением для генерации ответов на транзакции с цифровыми подписями. Политика подтверждения смарт-контрактов указывает организации, чьи пиры должны поставить цифровую подпись на сгенерированной транзакции перед тем, как она будет принята в копию реестра у пиров.
 
-    An endorsement policy for a smart contract identifies the
-    organizations whose peer should digitally sign a generated transaction
-    before it can be accepted onto a committing peer's copy of the ledger.
+Существуют два основных типа пиров и две роли, которые пир может принять на себя:
 
-These are the two major types of peer; there are two other roles a peer can
-adopt:
+  * [*Пир-лидер*](../glossary.html#leading-peer). У организации, имеющей несколько пиров в канале есть пир-лидер, узел, который берет на себя ответственность за передачу транзакций от ordering-службы другим сохраняющим пирам организации. Пир может выбрать участие либо в статическом, либо в динамическом отборе лидеров. Поэтому полезно думать о двух категориях пиров с точки зрения лидерства -- тех, у которых отбор лидеров статичен, и тех, у которых он динамичен. В статичной категории лидерами могут быть ноль или больше пиров. В динамичной категории один пир может быть избранным лидером группы. Более того, в динамичной категории, если пир-лидер терпит неудачу, среди оставшихся пиров выбирается новый лидер. Это означает, что пиры организаций могут иметь одного или больше лидеров, связанных с ordering-службой. Это повышает устойчивость и масштабируемость в крупных сетях, обрабатывающих большие объемы сделок.
 
-  * [*Leader peer*](../glossary.html#leading-peer). When an organization has
-    multiple peers in a channel, a leader peer is a node which takes
-    responsibility for distributing transactions from the orderer to the other
-    committing peers in the organization.  A peer can choose to participate in
-    static or dynamic leadership selection.
+  * [*Пир-anchor*](../glossary.html#anchor-peer). Если у пира есть потребность в общении с пиром другой организации, то он может использовать один из **пиров-anchor**, определенных в конфигурации канала этой организации. Организация может иметь ноль или больше пиров-anchor определенных для нее, и пиры-anchor могут помогать во многих сценариях межорганизационной коммуникации.
 
-    It is helpful, therefore to think of two sets of peers from leadership
-    perspective -- those that have static leader selection, and those with
-    dynamic leader selection. For the static set, zero or more peers can be
-    configured as leaders. For the dynamic set, one peer will be elected leader
-    by the set. Moreover, in the dynamic set, if a leader peer fails, then the
-    remaining peers will re-elect a leader.
+Заметьте, что пир может быть сохраняющим пиром, подтверждающим пиром, пиром-лидером и пиром-
+anchor одновременно! Только пир-anchor из них является опциональным -- для всех практических 
+целей всегда должен быть пир-лидер, хотя бы один подтверждающий пир и хотя бы один сохраняющий 
+пир.
 
-    It means that an organization's peers can have one or more leaders connected
-    to the ordering service. This can help to improve resilience and scalability
-    in large networks which process high volumes of transactions.
+### Добавление организаций и пиров в канал
 
-  * [*Anchor peer*](../glossary.html#anchor-peer). If a peer needs to
-    communicate with a peer in another organization, then it can use one of the
-    **anchor peers** defined in the channel configuration for that organization.
-    An organization can have zero or more anchor peers defined for it, and an
-    anchor peer can help with many different cross-organization communication
-    scenarios.
+При добавлении R2 в канал, организация должна установить смарт-контракт S5 на узел пира P2. Это 
+очевидно -- если приложения A1 или A2 захотят использовать S5 на узле пира P2 для генерации 
+транзакции, он должен там быть. Узел пира P2 имеет физическую копию смарт-контракта и реестра, и 
+так же как и P1 он может генерировать и принимать транзакции в свою копию реестра L1.
 
-Note that a peer can be a committing peer, endorsing peer, leader peer and
-anchor peer all at the same time! Only the anchor peer is optional -- for all
-practical purposes there will always be a leader peer and at least one
-endorsing peer and at least one committing peer.
+R2 должен принять то же определение чейнкода, которое было принято R1 для того, чтобы 
+использовать смарт-контракт S5. Поскольку определение чейнкода уже сохранено в канал 
+организацией R1, R2 может начинать пользоваться чейнкодом, как только одобрит определение 
+чейнкода и установит чейнкод-пакет. Сохранение транзакции происходит только один раз. Новая 
+организация может использовать чейнкод, как только подтвердит параметры чейнкода, установленные 
+другими членами канала. Поскольку подтверждение определения чейнкода происходит на уровне 
+организаций, R2 может единожды одобрить определение чейнкода, а потом добавлять пиров в канал с 
+уже установленным чейнкодом. Однако, если R2 захочет поменять определение чейнкода,то и R1, и R2 
+должны будут подтвердить новое определение для их организаций, а затем одна из организаций 
+должна будет сохранить определение в канл. 
 
-### Adding organizations and peers to the channel
+В нашей сети мы видим, как канал C1 соединяет два клиентских приложения, два узла пиров и 
+ordering-службу. Поскольку есть только один канал, существует только один **логический** реестр, 
+с которым взаимодействуют эти компоненты. Узлы пиров P1 и P2 хранят идентичные копии реестра L1. 
+Копии смарт-контракта S5 обычно реализованы с помощью одного языка программирования и в таком 
+случае идентичны, если же они реализованы с помощью разных языков программирования, то они 
+должны быть семантически одинаковы.
 
-When R2 joins the channel, the organization must install smart contract S5
-onto its peer node, P2. That's obvious -- if applications A1 or A2 wish to use
-S5 on peer node P2 to generate transactions, it must first be present;
-installation is the mechanism by which this happens. At this point, peer node P2
-has a physical copy of the smart contract and the ledger; like P1, it can both
-generate and accept transactions onto its copy of ledger L1.
+Можно видеть, что осторожное добавление пиров в сеть может помочь поддерживать высокую 
+производительность, стабильность и устойчивость. Например, большее количество пиров в сети 
+позволят подключать больше приложений, а большее количество пиров в организации обеспечат 
+дополнительную устойчивость в случае незапланированных или запланированных сбоев.
 
-R2 must approve the same chaincode definition as was approved by R1 in order to
-use smart contract S5. Because the chaincode definition has already been
-committed to the channel by organization R1, R2 can use the chaincode as soon as
-the organization approves the chaincode definition and installs the chaincode
-package. The commit transaction only needs to happen once. A new organization
-can use the chaincode as soon as they approve the chaincode parameters agreed to
-by other members of the channel. Because the approval of a chaincode definition
-occurs at the organization level, R2 can approve the chaincode definition once
-and join multiple peers to the channel with the chaincode package installed.
-However, if R2 wanted to change the chaincode definition, both R1 and R2 would
-need to approve a new definition for their organization, and then one of the
-organizations would need to commit the definition to the channel.
+Все это означает, что можно настроить сложные топологии, которые поддерживают множество 
+операционных целей -- не существует теоретического ограничения размера сети. Кроме того, 
+технический механизм, с помощью которого пиры отдельной организации находят друг друга и 
+общаются -- [протокол сплетни](../gossip.html#gossip-protocol) -- разметит большое количество 
+узлов пиров для поддержки этих топологий.
 
-In our network, we can see that channel C1 connects two client applications, two
-peer nodes and an ordering service.  Since there is only one channel, there is
-only one **logical** ledger with which these components interact. Peer nodes P1
-and P2 have identical copies of ledger L1. Copies of smart contract S5 will
-usually be identically implemented using the same programming language, but
-if not, they must be semantically equivalent.
-
-We can see that the careful addition of peers to the network can help support
-increased throughput, stability, and resilience. For example, more peers in a
-network will allow more applications to connect to it; and multiple peers in an
-organization will provide extra resilience in the case of planned or unplanned
-outages.
-
-It all means that it is possible to configure sophisticated topologies which
-support a variety of operational goals -- there is no theoretical limit to how
-big a network can get. Moreover, the technical mechanism by which peers within
-an individual organization efficiently discover and communicate with each other --
-the [gossip protocol](../gossip.html#gossip-protocol) -- will accommodate a
-large number of peer nodes in support of such topologies.
-
-The careful use of network and channel policies allow even large networks to be
-well-governed.  Organizations are free to add peer nodes to the network so long
-as they conform to the policies agreed by the network. Network and channel
-policies create the balance between autonomy and control which characterizes a
-de-centralized network.
+Осторожное использование политик сети и каналов позволяет качественно управлять огромными 
+сетями. Организации могут добавлять узлы пиров в сеть, если они соответствуют политикам, 
+утвержденным в сети. Политики сети и каналов устанавливают баланс между автономностью и 
+контролируемостью, характерными для децентрализованной сети.
 
 ## Simplifying the visual vocabulary
 
