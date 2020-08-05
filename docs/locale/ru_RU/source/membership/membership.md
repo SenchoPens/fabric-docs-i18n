@@ -1,68 +1,124 @@
 # Membership Service Provider (MSP)
 
-## Why do I need an MSP?
+## Зачем нужен MSP?
 
-Because Fabric is a permissioned network, blockchain participants need a way to prove their identity to the rest of the network in order to transact on the network. If you've read through the documentation on [Identity](../identity/identity.html)
-you've seen how a Public Key Infrastructure (PKI) can provide verifiable identities through a chain of trust. How is that chain of trust used by the blockchain network?
+Поскольку Fabric -- permissioned сеть, участникам блокчейн-сети нужен способ подтвердить их 
+identity остальной части сети, чтобы осуществлять транзакции в сети. Если вы читали документацию 
+про [Identity](../identity/identity.html), то вы видели, как Public Key Infrastructure (PKI) 
+(инфраструктура публичного ключа) с помощью цепочек доверия предоставляет проверяемые 
+identities. Как эта цепочка доверия используется блокчейн-сетью?
 
-Certificate Authorities issue identities by generating a public and private key which forms a key-pair that can be used to prove identity. Because a private key can never be shared publicly, a mechanism is required to enable that proof which is where the MSP comes in. For example, a peer uses its private key to digitally sign, or endorse, a transaction.  The MSP on the ordering service contains the peer's public key which is then used to verify that the signature attached to the transaction is valid. The private key is used to produce a signature on a transaction that only the corresponding public key, that is part of an MSP, can match. Thus, the MSP is the mechanism that allows that identity to be trusted and recognized by the rest of the network without ever revealing the member’s private key.
+Certificate Authorities раздают identities, генерируя публичный и приватный ключи, которые 
+формируют пару, с помощью которой можно подтвердить identity. Поскольку приватный ключ должен 
+оставаться приватным, необходим механизм, позволяющий получить подтверждение, и здесь появляется 
+MSP. Например, пир использует приватный ключ, чтобы поставить цифровую подпись на транзакции. 
+MSP ordering-службы владеет публичным ключом пира и использует его, чтобы проверить, что 
+приложенная к транзакции подпись валидна. Приватный ключ используется для создания подписи на 
+транзакции, которая может соответствовать только парному публичному ключу (и именно за эту часть 
+отвечает MSP). Таким образом, MSP -- это механизм, позволяющий узнавать и доверять отдельно 
+взятой identity, при этом не раскрывая ее публичный ключ.
 
-Recall from the credit card scenario in the Identity topic that the Certificate Authority is like a card provider — it dispenses many different types of verifiable identities. An MSP, on the other hand, determines which credit card providers are accepted at the store. In this way, the MSP turns an identity (the credit card) into a role (the ability to buy things at the store).
+Возвращаясь к сценарию из темы Identity про кредитные карты: Certificate Authority -- как 
+поставщик карт -- выдает множество различных видов identities, поддающихся проверке. MSP же 
+определяет, какие поставщики карт принимаются в магазине. Так, MSP превращает identity 
+(кредитную карту) в "роль" (возможность покупать вещи в магазине). 
 
-This ability to turn verifiable identities into roles is fundamental to the way Fabric networks function, since it allows organizations, nodes, and channels the ability establish MSPs that determine who is allowed to do what at the organization, node, and channel level.
+Возможность превращать проверяемые identities в роли является очень важной в работе сетей 
+Fabric, поскольку это позволяет организациям, узлам и каналам устанавливать MSP, который 
+определяет кто что может делать на уровне организации, узла и канала. 
 
 ![MSP1a](./membership.msp.diagram.png)
 
-*Identities are similar to your credit cards that are used to prove you can pay. The MSP is similar to the list of accepted credit cards.*
+*Identities похожи на кредитные карты, подтверждающие, что вы способны заплатить. MSP похож на 
+список принимаемых карт.*
 
-Consider a consortium of banks that operate a blockchain network. Each bank operates peer and ordering nodes, and the peers endorse transactions submitted to the network. However, each bank would also have departments and account holders. The account holders would belong to each organization, but would not run nodes on the network. They would only interact with the system from their mobile or web application. So how does the network recognize and differentiate these identities? A CA was used to create the identities, but like the card example, those identities can't just be issued, they need to be recognized by the network. MSPs are used to define the organizations that are trusted by the network members. MSPs are also the mechanism that provide members with a set of roles and permissions within the network. Because the MSPs defining these organizations are known to the members of a network, they can then be used to validate that network entities that attempt to perform actions are allowed to.
+Рассмотрим консорциум банков, управляющих блокчейн-сетью. Каждый банк управляет пирами и 
+ordering-узлами, пиры подтверждают транзакции в сети. Однако в каждом банке есть департаменты и 
+владельцы счетов. Владельцы счетов принадлежат организациям, но не управляют узлами в сети. Они 
+лишь будут взаимодействовать с системой с помощью мобильных или веб приложений. Как сеть узнает 
+и будет различать эти identities? CA создал identities, но, как и в примере с картой, эти 
+identities нельзя просто выдать -- их должна узнавать сеть. MSP испоьзуются для определения 
+организаций, которым доверяют члены сети. MSP также является механизмом, предоставляющим членам 
+роли и разрешения в сети. Поскольку MSP, определяющие эти организации, известны членам сети, их 
+можно использовать, чтобы проверить, что структуры в сети, пытающиеся выполнить действия, имеют 
+право на эти действия. 
 
-Finally, consider if you want to join an _existing_ network, you need a way to turn your identity into something that is recognized by the network. The MSP is the mechanism that enables you to participate on a permissioned blockchain network. To transact on a Fabric network a member needs to:
+В итоге, если вы хотите присоединиться к _существующей_ сети, вы должны превратить вашу identity 
+во что-то узнаваемое в сети. MSP -- механизм, позволяющий вам участвовать в permissioned 
+блокчейн-сети. Для осуществления транзакций член сети Fabric должен иметь:
 
-1. Have an identity issued by a CA that is trusted by the network.
-2. Become a member of an _organization_ that is recognized and approved by the network members. The MSP is how the identity is linked to the membership of an organization. Membership is achieved by adding the member's public key (also known as certificate, signing cert, or signcert) to the organization’s MSP.
-3. Add the MSP to either a [consortium](../glossary.html#consortium) on the network or a channel.
-4. Ensure the MSP is included in the [policy](../policies/policies.html) definitions on the network.
+1. Иметь identity, выданное доверенным CA
+2. Стать членом _организации_, утвержденной и признаваемой членами сети
+С помощью MSP identity привязана к организации, что достигается путем добавления публичного 
+ключа члена (также называемого сертификатом) в MSP организации.
+3. Добавить MSP или в [консорциум](../glossary.html#consortium) в сети или в канал.
+4. Убедиться, что MSP включен в определения [политики](../policies/policies.html) в сети.
 
-## What is an MSP?
+## Что такое MSP?
 
-Despite its name, the Membership Service Provider does not actually provide anything. Rather, the implementation of the MSP requirement is a set of folders that are added to the configuration of the network and is used to define an organization both inwardly (organizations decide who its admins are) and outwardly (by allowing other organizations to validate that entities have the authority to do what they are attempting to do).  Whereas Certificate Authorities generate the certificates that represent identities, the MSP contains a list of permissioned identities.
+Несмотря на имя, Membership Service Provider ничего не предоставляет. MSP реализован как набор 
+директорий, которые добавляются в конфигурацию сети и используются для определения организации 
+как внутри организации (организации решают, кто является их администратором), так и снаружи 
+(позволяя другим организациям подтверждать, что эти органы имеют полномочия на действия, которые 
+они хотят совершить).
 
-The MSP identifies which Root CAs and Intermediate CAs are accepted to define the members of a trust domain by listing the identities of their members, or by identifying which CAs are authorized to issue valid identities for their members.
+MSP определяет, какие identity валидные, а какие нет, либо состовляя список валидных identity, 
+либо указывая доверенные корневые и промежуточные CA, которые могут выписывать identity.
 
-But the power of an MSP goes beyond simply listing who is a network participant or member of a channel. It is the MSP that turns an identity into a **role** by identifying specific privileges an actor has on a node or channel. Note that when a user is registered with a Fabric CA, a role of admin, peer, client, orderer, or member must be associated with the user. For example, identities registered with the "peer" role should, naturally, be given to a peer. Similarly, identities registered with the "admin" role should be given to organization admins. We'll delve more into the significance of these roles later in the topic.
+Но область ответственности MSP выходит за рамки простого перечисления участников сети и членов 
+каналов. MSP превращает identity в **роль**, определяя особые привилегии участника в канале или 
+узле. Заметьте, что если пользователь регистрируется с помощью Fabric CA, роль администратора, 
+пира, ordering-службы или члена должна быть связана с пользователем. Например, identities, 
+зарегестрированные в качестве "пиров" должны, очевидно, принадлежать пирам. Аналогично, 
+identities, зарегестрированные в качестве "администраторов" должны принадлежать администраторам 
+организаций. Мы более подробно рассмотрим значение этих ролей в этой теме.
 
-In addition, an MSP can allow for the identification of a list of identities that have been revoked --- as discussed in the [Identity](../identity/identity.html) documentation --- but we will talk about how that process also extends to an MSP.
+В дополнение, MSP может отзывать (аннулировать) конкретные identity (что упоминалось в ...), но 
+мы обсудим, как этот процесс выглядит со стороны MSP.
 
-## MSP domains
+## Области MSP
 
-MSPs occur in two domains in a blockchain network:
+MSP встречается в двух областях блокчейн-сети:
 
-* Locally on an actor's node (**local MSP**)
-* In channel configuration (**channel MSP**)
+* Локально на узле участника (**локальный MSP**)
+* В конфигурации каналов (**канальный MSP**)
 
-The key difference between local and channel MSPs is not how they function -- both turn identities into roles -- but their **scope**. Each MSP lists roles and permissions at a particular level of administration.
+Ключевое различие между локальным и канальным MSP не в том, как они функционируют -- оба 
+превращают identities в роли -- а их **масштаб**. В каждом MSP перечисляются функции и 
+полномочия на определенном уровне управления.
 
-### Local MSPs
+### Локальные MSP
 
-**Local MSPs are defined for clients and for nodes (peers and orderers)**.
-Local MSPs define the permissions for a node (who are the peer admins who can operate the node, for example). The local MSPs of clients (the account holders in the banking scenario above), allow the user to authenticate itself in its transactions as a member of a channel (e.g. in chaincode transactions), or as the owner of a specific role into the system such as an organization admin, for example, in configuration transactions.
+**Локальные MSP определены для клиентов и узлов (пиров и ordering-служб)**.
+Локальные MSP определяют разрешения для узла в сети. Локальный MSP клиентов (владельцев счетов в 
+сценарии про банк) позволяют пользователям указывать себя на транзакциях в качестве члена канала 
+(например, в транзакции чейнкода) или в качестве обладателя конкретной роли в системе (например, 
+администратор организации в конфигурационных транзакциях).
 
-**Every node must have a local MSP defined**, as it defines who has administrative or participatory rights at that level (peer admins will not necessarily be channel admins, and vice versa).  This allows for authenticating member messages outside the context of a channel and to define the permissions over a particular node (who has the ability to install chaincode on a peer, for example). Note that one or more nodes can be owned by an organization. An MSP defines the organization admins. And the organization, the admin of the organization, the admin of the node, and the node itself should all have the same root of trust.
+**Каждый узел должен иметь определенный локальный MSP**, поскольку он определяет, кто имеет 
+административные права или права участия на этом уровне (пиры-администраторы не обязательно 
+будут администраторами каналов и наоборот). Это позволяет аутентифицировать сообщения членов вне 
+канала и определять разрешения на управление конкретными узлами (имеющими, например, возможность 
+установить чейнкод на пир). Заметьте, что у организации может быть несколько узлов. MSP 
+определяет администраторов организации. И организация, администратор организации, администратор 
+узла и сам узел должны входить в одну цепочку доверия.
 
-An orderer local MSP is also defined on the file system of the node and only applies to that node. Like peer nodes, orderers are also owned by a single organization and therefore have a single MSP to list the actors or nodes it trusts.
+Локальный MSP ordering-службы также определен в файловой системе узла и применяется только к 
+этому узлу. Так же как и пиры, ordering-службы принадлежат единственной организации и поэтому 
+имеют один MSP для ведения списка участников или узлов, которым она доверяет.
 
-### Channel MSPs
+### Канальные MSP
 
-In contrast, **channel MSPs define administrative and participatory rights at the channel level**. Peers and ordering nodes on an application channel share the same view of channel MSPs, and will therefore be able to correctly authenticate the channel participants. This means that if an organization wishes to join the channel, an MSP incorporating the chain of trust for the organization's members would need to be included in the channel configuration. Otherwise transactions originating from this organization's identities will be rejected. Whereas local MSPs are represented as a folder structure on the file system, channel MSPs are described in a channel configuration.
+В отличие от локального MSP, **канальный MSP определяет административные права и права участия на уровне каналов**. Пиры и ordering-узлы в канале пользуются одним и тем же канальным MSP, и поэтому могут корректно определять участников канала. Это означает, что, если организация хочет присоединиться к каналу, в конфигурацию канала нужно включить MSP. В противном случае транзакции от identities этой организации будут отклоняться. В отличие от локальных MSP, канальные MSP описываются в конфигурации канала.
 
 ![MSP1d](./ChannelMSP.png)
 
-*Snippet from a channel config.json file that includes two organization MSPs.*
+*Кусок кода из файла config.json канала, включающего два MSP организации.*
 
-**Channel MSPs identify who has authorities at a channel level**.
-The channel MSP defines the _relationship_ between the identities of channel members (which themselves are MSPs) and the enforcement of channel level policies. Channel MSPs contain the MSPs of the organizations of the channel members.
+**Канальные MSP определяют, кто на уровне канала обладает полномочиями**.
+Канальный MSP определяет _отношения_ между identities членов канала (которые сами являются MSP) и обеспечивает соблюдение политики на уровне каналов. Канальные MSP содержат MSP организаций-членов канала.
 
+**Каждая участвующая в канале организация должна иметь MSP, определенный для нее**. На самом деле рекомендуется соотношение один-к-одному между организациями и MSP. MSP определяет, какие члены уполномочены действовать от имени организации. Это включает в себя конфигурацию самого MSP 
 **Every organization participating in a channel must have an MSP defined for it**. In fact, it is recommended that there is a one-to-one mapping between organizations and MSPs. The MSP defines which members are empowered to act on behalf of the organization. This includes configuration of the MSP itself as well as approving administrative tasks that the organization has role, such as adding new members to a channel. If all network members were part of a single organization or MSP, data privacy is sacrificed. Multiple organizations facilitate privacy by segregating ledger data to only channel members. If more granularity is required within an organization, the organization can be further divided into organizational units (OUs) which we describe in more detail later in this topic.
 
 **The system channel MSP includes the MSPs of all the organizations that participate in an ordering service.** An ordering service will likely include ordering nodes from multiple organizations and collectively these organizations run the ordering service, most importantly managing the consortium of organizations and the default policies that are inherited by the application channels.
@@ -76,14 +132,15 @@ The following diagram illustrates how local and channel MSPs coexist on the netw
 
 *The MSPs for the peer and orderer are local, whereas the MSPs for a channel (including the network configuration channel, also known as the system channel) are global, shared across all participants of that channel. In this figure, the network system channel is administered by ORG1, but another application channel can be managed by ORG1 and ORG2. The peer is a member of and managed by ORG2, whereas ORG1 manages the orderer of the figure. ORG1 trusts identities from RCA1, whereas ORG2 trusts identities from RCA2. It is important to note that these are administration identities, reflecting who can administer these components. So while ORG1 administers the network, ORG2.MSP does exist in the network definition.*
 
-## What role does an organization play in an MSP?
+## Какую роль в MSP играют организации?
 
-An **organization** is a logical managed group of members. This can be something as big as a multinational corporation or a small as a flower shop. What's most important about organizations (or **orgs**) is that they manage their members under a single MSP. The MSP allows an identity to be linked to an organization. Note that this is different from the organization concept defined in an X.509 certificate, which we mentioned above.
+**Организация** -- это логическая управляемая группа членов. Она может быть размером с международную корпорацию или размером с цветочный магазин. Самое важное в организациях (или  **orgs**) -- то, что они управляют своими членами в рамках единого MSP. MSP привязывает identity к организации. Заметьте, что это отличается от определения организации в сертификате X.509, который мы упоминали выше.
 
-The exclusive relationship between an organization and its MSP makes it sensible to name the MSP after the organization, a convention you'll find adopted in most policy configurations. For example, organization `ORG1` would likely have an MSP called something like `ORG1-MSP`. In some cases an organization may require multiple membership groups --- for example, where channels are used to perform very different business functions between organizations. In these cases it makes sense to have multiple MSPs and name them accordingly, e.g., `ORG2-MSP-NATIONAL` and `ORG2-MSP-GOVERNMENT`, reflecting the different membership roots of trust within `ORG2` in the `NATIONAL` sales channel compared to the `GOVERNMENT` regulatory channel.
+Благодаря уникальным отношениям между организацией и ее MSP разумно называть MSP в честь организации, обычай, который принят в большинстве конфигураций политик. Например, у организации `ORG1` MSP будет называться как-то похоже на `ORG1-MSP`. В некоторых случаях организации могут требоваться многочисленные группы, например, в тех случаях, когда организации используют каналы для выполнения различных бизнес-функций. В таких случаях логично иметь несколько MSP, названных соответственно, например, `ORG2-MSP-NATIONAL` и `ORG2-MSP-GOVERNMENT`.
 
-### Organizational Units (OUs) and MSPs
+### Organizational Units (OUs) и MSP
 
+Организация может также быть разделена на несколько **organizational units** (OU, организационные подразделения)
 An organization can also be divided into multiple **organizational units**, each of which has a certain set of responsibilities, also referred to as `affiliations`. Think of an OU as a department inside an organization. For example, the `ORG1` organization might have both `ORG1.MANUFACTURING` and `ORG1.DISTRIBUTION` OUs to reflect these separate lines of business. When a CA issues X.509 certificates, the `OU` field in the certificate specifies the line of business to which the identity belongs. A benefit of using OUs like this is that these values can then be used in policy definitions in order to restrict access or in smart contracts for attribute-based access control. Otherwise, separate MSPs would need to be created for each organization.
 
 Specifying OUs is optional. If OUs are not used, all of the identities that are part of an MSP --- as identified by the Root CA and Intermediate CA folders --- will be considered members of the organization.
@@ -111,12 +168,12 @@ NodeOUs:
     OrganizationalUnitIdentifier: orderer
 ```
 
-In the example above, there are 4 possible Node OU `ROLES` for the MSP:
+В примере выше есть 4 возможные `ROLES` Node OU  для MSP:
 
-   * client
-   * peer
-   * admin
-   * orderer
+   * клиент
+   * пир
+   * администрация
+   * ordering-служба
 
 This convention allows you to distinguish MSP roles by the OU present in the CommonName attribute of the X509 certificate. The example above says that any certificate issued by cacerts/ca.sampleorg-cert.pem in which OU=client will identified as a client, OU=peer as a peer, etc. Starting with Fabric v1.4.3, there is also an OU for the orderer and for admins. The new admins role means that you no longer have to explicitly place certs in the admincerts folder of the MSP directory. Rather, the `admin` role present in the user's signcert qualifies the identity as an admin user.
 
