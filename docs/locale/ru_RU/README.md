@@ -43,12 +43,12 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
     - [x] Hyperledger Fabric Model
     - [x] Blockchain network
     - [x] Identity (edited)
-    - [ ] Membership Service Provider (MSP)
+    - [x] Membership Service Provider (MSP)
     - [x] Policies
     - [ ] Peers
     - [x] Ledger (edited)
     - [ ] The Ordering Service
-    - [ ] Smart Contracts and Chaincode
+    - [x] Smart Contracts and Chaincode
     - [ ] Fabric chaincode lifecycle
     - [x] Private data
     - [ ] Channel capabilities
@@ -74,9 +74,9 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
     - [x] Error handling
     - [x] Logging Control
     - [x] Securing Communication With Transport Layer Security (TLS)
-    - [ ] Configuring and operating a Raft ordering service
-    - [ ] Migrating from Kafka to Raft
-    - [ ] Bringing up a Kafka-based Ordering Service
+    - [x] Configuring and operating a Raft ordering service
+    - [x] Migrating from Kafka to Raft
+    - [x] Bringing up a Kafka-based Ordering Service
 - [ ] Upgrading to the latest release
 - [ ] Commands Reference
 - [ ] Architecture Reference
