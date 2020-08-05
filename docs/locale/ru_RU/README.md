@@ -40,10 +40,10 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
 - [ ] Release notes
 - [ ] Key Concepts
     - [x] Introduction (edited)
-    - [x] Hyperledger Fabric Model
-    - [x] Blockchain network
+    - [x] Hyperledger Fabric Model (edited)
+    - [x] Blockchain network (edited)
     - [x] Identity (edited)
-    - [ ] Membership Service Provider (MSP)
+    - [x] Membership Service Provider (MSP) (edited)
     - [x] Policies
     - [ ] Peers
     - [x] Ledger (edited)
@@ -57,7 +57,7 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
 - [ ] Developing Applications
 - [ ] Tutorials
 - [ ] Deploying a production network
-- [ ] Operations Guides
+- [x] Operations Guides
     - [x] Setting up an ordering node (edited)
     - [x] Membership Service Providers (MSP) (edited)
     - [x] Using a Hardware Security Module (HSM)
@@ -74,9 +74,9 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
     - [x] Error handling
     - [x] Logging Control
     - [x] Securing Communication With Transport Layer Security (TLS)
-    - [ ] Configuring and operating a Raft ordering service
-    - [ ] Migrating from Kafka to Raft
-    - [ ] Bringing up a Kafka-based Ordering Service
+    - [x] Configuring and operating a Raft ordering service
+    - [x] Migrating from Kafka to Raft
+    - [x] Bringing up a Kafka-based Ordering Service
 - [ ] Upgrading to the latest release
 - [ ] Commands Reference
 - [ ] Architecture Reference
