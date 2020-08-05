@@ -1,103 +1,89 @@
-# Peers
+# Пиры
 
-A blockchain network is comprised primarily of a set of *peer nodes* (or, simply, *peers*).
-Peers are a fundamental element of the network because they host ledgers and smart
-contracts. Recall that a ledger immutably records all the transactions generated
-by smart contracts (which in Hyperledger Fabric are contained in a *chaincode*,
-more on this later). Smart contracts and ledgers are used to encapsulate the
-shared *processes* and shared *information* in a network, respectively. These
-aspects of a peer make them a good starting point to understand a Fabric network.
+Блокчейн-сеть состоит из набора *узлов пиров* (или просто *пиров*). Пиры являются важнейшими 
+элементами сети, поскольку они хранят реестры и смарт-контракты. Напомним, что реестр записывает 
+(без возможности последующего редактирования) транзакции, сгенерированные смартконтрактами 
+(которые в Hyperledger Fabric хранятся в *чейнкоде*, об этом позже поговорим подробнее). 
+Смартконтракты и реестры используются для инкапсулирования общих *процессов* и общей 
+*информации* в сети. Это делает пиров хорошей отправной точкой для понимания сети Fabric.
 
-Other elements of the blockchain network are of course important: ledgers and
-smart contracts, orderers, policies, channels, applications, organizations,
-identities, and membership, and you can read more about them in their own
-dedicated sections. This section focusses on peers, and their relationship to those
-other elements in a Fabric network.
+Другие элементы сблокчейн-сети также, конечно, очень важны: реестры, смартконтракты, ordering-
+службы, политики, каналы, приложения, организации, identities, membership --- о них можно 
+почитать в разделах, специально посвященным им. В этом разделе идет речь о пирах и их отношениях 
+с остальными элементами сети Fabric.
 
 ![Peer1](./peers.diagram.1.png)
 
-*A blockchain network is comprised of peer nodes, each of which can hold copies
-of ledgers and copies of smart contracts. In this example, the network N
-consists of peers P1, P2 and P3, each of which maintain their own instance of
-the distributed ledger L1. P1, P2 and P3 use the same chaincode, S1, to access
-their copy of that distributed ledger*.
+*Блокчейн-сеть состоит из пиров, каждый из которых может хранить копии реестров и копии 
+смартконтрактов. В этом примере, сеть  N состоит из пиров P1, P2 и P3, каждый из которых хранит 
+свою копию распределенного реестра L1. P1, P2 и P3 используют один и тот же чейнкод S1, для 
+доступа в свою копию распределенного реестра*.
 
-Peers can be created, started, stopped, reconfigured, and even deleted. They
-expose a set of APIs that enable administrators and applications to interact
-with the services that they provide. We'll learn more about these services in
-this section.
+Пиры можно создавать, запускать, останавливать, перенастраивать и даже удалять. Они 
+предоставляют набор API, который позволяет администраторам и приложениям взаимодействовать с 
+услугами, которые они предоставляют. Мы узнаем больше про эти услуги в этом разделе.
 
-### A word on terminology
+### Пара слов о терминологии
 
-Fabric implements **smart contracts** with a technology concept it calls
-**chaincode** --- simply a piece of code that accesses the ledger, written in
-one of the supported programming languages. In this topic, we'll usually use the
-term **chaincode**, but feel free to read it as **smart contract** if you're
-more used to that term. It's the same thing! If you want to learn more about
-chaincode and smart contracts, check out our [documentation on smart contracts
-and chaincode](../smartcontract/smartcontract.html).
+**Смартконтракты** реализованы в Fabric с помощью технологии чейнкод --- просто кусок кода, 
+который имеет доступ к рееестру и написан на одном из поддерживаемых языков программирования. В 
+этой теме мы будем чаще использовать термин **чейнкод**, но вы можете читать этот термин как 
+**смартконтракт**, если так вам привычнее. Это одно и то же. Если вы хотите узнать больше о 
+чейнкоде и смарт-контрактах, ознакомьтесь с
+[документацией про чейнкоды и смарт-контракты](../smartcontract/smartcontract.html).
 
-## Ledgers and Chaincode
+## Реестры и чейнкод
 
-Let's look at a peer in a little more detail. We can see that it's the peer that
-hosts both the ledger and chaincode. More accurately, the peer actually hosts
-*instances* of the ledger, and *instances* of chaincode. Note that this provides
-a deliberate redundancy in a Fabric network --- it avoids single points of
-failure. We'll learn more about the distributed and decentralized nature of a
-blockchain network later in this section.
+Давайте присмотримся к пиру. Мы видим, что этот пир хранит и реестр, и чейнкод. Точнее пир 
+хранит *копию* реестра и *копию* чейнкода. Заметьте, благодаря этому Fabric избегает единичных 
+точек сбоя. Мы узнаем больше о децентрализованности и распределенности блокчейн-сети позже в 
+этом разделе.
 
 ![Peer2](./peers.diagram.2.png)
 
-*A peer hosts instances of ledgers and instances of chaincodes. In this example,
-P1 hosts an instance of ledger L1 and an instance of chaincode S1. There
-can be many ledgers and chaincodes hosted on an individual peer.*
+*Пир хранит копии реестров и чейнкодов. В этом примере, P1 хранит копию реестра L1 и копию 
+чейнкода S1. Отдельно взятый пир может хранить много реестров и чейнкодов.*
 
-Because a peer is a *host* for ledgers and chaincodes, applications and
-administrators must interact with a peer if they want to access these resources.
-That's why peers are considered the most fundamental building blocks of a
-Fabric network. When a peer is first created, it has neither ledgers nor
-chaincodes. We'll see later how ledgers get created, and how chaincodes get
-installed, on peers.
+Поскольку пир хранит реестры и чейнкоды, приложения и администраторы для получения доступа к 
+этим ресурсам взаимодействуют с пиром. Именно поэтому пиры считаются важными элементами в сети 
+Fabric. Только что созданный пир не имеет ни копии реестра, ни копии чейнкода. Позже мы увидим, 
+как у пиров создаются реестры и устанавливаются чейнкоды. 
 
-### Multiple Ledgers
+### Несколько реестров
 
-A peer is able to host more than one ledger, which is helpful because it allows
-for a flexible system design. The simplest configuration is for a peer to manage a
-single ledger, but it's absolutely appropriate for a peer to host two or more
-ledgers when required.
+Пир способен хранить больше одного реестра и это полезно, поскольку так архитектура системы 
+становится более гибкой. В простейшей конфигурации пир управляет единственным реестром, но, если 
+пир хранит два и более реестра, это абсолютно нормально.
 
 ![Peer3](./peers.diagram.3.png)
 
-*A peer hosting multiple ledgers. Peers host one or more ledgers, and each
-ledger has zero or more chaincodes that apply to them. In this example, we
-can see that the peer P1 hosts ledgers L1 and L2. Ledger L1 is accessed using
-chaincode S1. Ledger L2 on the other hand can be accessed using chaincodes S1 and S2.*
+*Пиры хранят один или более реестр и каждый реестр имеет ноль или болше чейнкодов, которые 
+пополняют его. В нашем примере пир P1 хранит реестры L1 и L2. Доступ к реестр L1 осуществляется 
+с помощью чейнкода S1. Доступ к реестру L2 же осуществляется с использованием чейнкодов S1 and 
+S2.*
 
-Although it is perfectly possible for a peer to host a ledger instance without
-hosting any chaincodes which access that ledger, it's rare that peers are configured
-this way. The vast majority of peers will have at least one chaincode installed
-on it which can query or update the peer's ledger instances. It's worth
-mentioning in passing that, whether or not users have installed chaincodes for use by
-external applications, peers also have special **system chaincodes** that are
-always present. These are not discussed in detail in this topic.
+Хотя пир может хранить копию реестра, но при этом не хранить чейнкоды, у которых есть доступ к 
+реестру, такая конфигурация редко встречается. У подавляющего большинства пиров установлен хотя 
+бы один чейнкод, с помощью которого можно запросить или обновить копию реестра пира. Стоит 
+упомянуть, что вне зависимости от того, установили ли пользователи чейнкод для использования 
+внешними приложениями, у пиров всегда есть специальные **системные чейнкоды**. Мы обсудим это 
+более детально позже.
 
-### Multiple Chaincodes
+### Несколько чейнкодов
 
-There isn't a fixed relationship between the number of ledgers a peer has and
-the number of chaincodes that can access that ledger. A peer might have
-many chaincodes and many ledgers available to it.
+Между количеством реестров и количеством чейнкодов отдельного пира нет установленного 
+соотношения. Пир может иметь много чейнкодов и много реестров доступных чейнкодам.
 
 ![Peer4](./peers.diagram.4.png)
 
-*An example of a peer hosting multiple chaincodes. Each ledger can have
-many chaincodes which access it. In this example, we can see that peer P1
-hosts ledgers L1 and L2, where L1 is accessed by chaincodes S1 and S2, and
-L2 is accessed by S1 and S3. We can see that S1 can access both L1 and L2.*
+*Каждый реестр может иметь много чейнкодов, у которых есть к нему доступ. В нашем примере пир P1 
+хранит реестры L1 и L2, причем L1 доступен чейнкодам S1 and S2, а L2 доступен S1 and S3. Мы 
+видим, что S1 имеет доступу и к L1, и к L2.*
 
-We'll see a little later why the concept of **channels** in Fabric is important
-when hosting multiple ledgers or multiple chaincodes on a peer.
+Позже мы поймем почему **каналы** в Fabric при хранении нескольких реестров или чейнкодов одним 
+пиром так важны.
 
-## Applications and Peers
+## Приложения и пиры
 
 We're now going to show how applications interact with peers to access the
 ledger. Ledger-query interactions involve a simple three-step dialogue between
