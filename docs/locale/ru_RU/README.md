@@ -41,7 +41,7 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
 - [ ] Key Concepts
     - [x] Introduction (edited)
     - [x] Hyperledger Fabric Model
-    - [ ] Blockchain network
+    - [x] Blockchain network
     - [x] Identity (edited)
     - [ ] Membership Service Provider (MSP)
     - [x] Policies
