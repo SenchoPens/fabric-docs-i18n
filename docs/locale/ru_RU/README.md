@@ -82,7 +82,7 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
 - [ ] Architecture Reference
 - [ ] Frequently Asked Questions
 - [ ] Contributions Welcome!
-- [ ] Glossary
+- [x] Glossary
 - [ ] Releases
 - [ ] Still Have Questions?
 - [ ] Status
