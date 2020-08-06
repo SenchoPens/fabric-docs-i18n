@@ -48,7 +48,7 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
     - [ ] Peers
     - [x] Ledger (edited)
     - [ ] The Ordering Service
-    - [ ] Smart Contracts and Chaincode
+    - [x] Smart Contracts and Chaincode
     - [ ] Fabric chaincode lifecycle
     - [x] Private data
     - [ ] Channel capabilities
