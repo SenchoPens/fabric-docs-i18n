@@ -85,122 +85,99 @@ S2.*
 
 ## Приложения и пиры
 
-We're now going to show how applications interact with peers to access the
-ledger. Ledger-query interactions involve a simple three-step dialogue between
-an application and a peer; ledger-update interactions are a little more
-involved, and require two extra steps. We've simplified these steps a little to
-help you get started with Fabric, but don't worry --- what's most important to
-understand is the difference in application-peer interactions for ledger-query
-compared to ledger-update transaction styles.
+Сейчас мы увидим, как приложения взаимодействуют с пирами, если хотят получить доступ к реестру. 
+Взаимодействия типа запрос в реестр состоят из трехступенчатого диалога между пиром и 
+приложением, взаимодействия типа обновления требуют на два шага больше. Мы упростили эти шаги, 
+чтобы упростить вам начало работы с Fabric, но не волнуйтесь --- самое важное --- понять разницу 
+между запросами в реестр и обновлениями реестра.
 
-Applications always connect to peers when they need to access ledgers and
-chaincodes. The Fabric Software Development Kit (SDK) makes this
-easy for programmers --- its APIs enable applications to connect to peers, invoke
-chaincodes to generate transactions, submit transactions to the network that
-will get ordered, validated and committed to the distributed ledger, and receive
-events when this process is complete.
+Приложения подключаются к пирам, когда им нужен доступ к реестрам и чейнкодам. Fabric Software 
+Development Kit (SDK) упрощает это для программистов --- его API позволяет приложениям 
+подключаться к пирам, запускать чейнкоды для генерации транзакций, распространять в сеть 
+транзакции, которые впоследствии будут упорядочены, проверены и сохранены в распределенный 
+реестр, и получать информацию о событиях после завершения этого процесса.
 
-Through a peer connection, applications can execute chaincodes to query or
-update a ledger. The result of a ledger query transaction is returned
-immediately, whereas ledger updates involve a more complex interaction between
-applications, peers and orderers. Let's investigate this in a little more detail.
+Через подключение к пирам приложения могут запускать чейнкоды для запросов в реестр или 
+обновлений его. Результат транзакции запроса в реестр возвращается сразу же, а для обновления 
+реестра нужно более сложное взаимодействие между приложениями, пирами и ordering-службами. 
+Давайте рассмотрим процесс более детально.
 
 ![Peer6](./peers.diagram.6.png)
 
-*Peers, in conjunction with orderers, ensure that the ledger is kept up-to-date
-on every peer. In this example, application A connects to P1 and invokes
-chaincode S1 to query or update the ledger L1. P1 invokes S1 to generate a
-proposal response that contains a query result or a proposed ledger update.
-Application A receives the proposal response and, for queries,
-the process is now complete. For updates, A builds a transaction
-from all of the responses, which it sends to O1 for ordering. O1 collects
-transactions from across the network into blocks, and distributes these to all
-peers, including P1. P1 validates the transaction before committing to L1. Once L1
-is updated, P1 generates an event, received by A, to signify completion.*
+*Пиры вместе с ordering-службами обеспечивают актуальность реестра на каждом пире. В нашем 
+примере приложение A подключается к P1 и запускает чейнкод S1 для запроса в реестр L1 или его 
+обновления. P1 запускает S1 для генерации ответа на proposal, содержащего результат запроса или 
+proposal на обновление реестра. Приложение A получает ответ на proposal и на этом завершается 
+процесс запроса. В случае же обновлений A составляет из всех ответов транзакцию и посылает ее O1 
+для упорядочивания. O1 собирает транзакции со всей сети в блоки и распространяет их пирам всей 
+сети, в том числе P1. P1 проверяет транзакцию перед сохранением в L1. После обновления L1 P1 
+создает событие, которое для приложения A означает окончание процесса.*
 
-A peer can return the results of a query to an application immediately since
-all of the information required to satisfy the query is in the peer's local copy of
-the ledger. Peers never consult with other peers in order to respond to a query from
-an application. Applications can, however, connect to one or more peers to issue
-a query; for example, to corroborate a result between multiple peers, or
-retrieve a more up-to-date result from a different peer if there's a suspicion
-that information might be out of date. In the diagram, you can see that ledger
-query is a simple three-step process.
+Пир сразу же возвращает результат запроса приложению, так как вся необходимая информация 
+находится в локальной копии реестра пира. Пиры не взаимодействуют друг с другом для отправки 
+приложению ответа на запрос. Однако приложения могут подключиться к нескольким пирам для одного и 
+того же запроса; например, для сопостовления результатов от разных пиров или для получения более 
+актуальтой информации, при подозрении, что информация могла устареть. На схеме можно видеть, что 
+запрос это простой трехступенчатый процесс.
 
-An update transaction starts in the same way as a query transaction, but has two
-extra steps. Although ledger-updating applications also connect to peers to
-invoke a chaincode, unlike with ledger-querying applications, an individual peer
-cannot perform a ledger update at this time, because other peers must first
-agree to the change --- a process called **consensus**. Therefore, peers return
-to the application a **proposed** update --- one that this peer would apply
-subject to other peers' prior agreement. The first extra step --- step four ---
-requires that applications send an appropriate set of matching proposed updates
-to the entire network of peers as a transaction for commitment to their
-respective ledgers. This is achieved by the application by using an **orderer** to
-package transactions into blocks, and distributing them to the entire network of
-peers, where they can be verified before being applied to each peer's local copy
-of the ledger. As this whole ordering processing takes some time to complete
-(seconds), the application is notified asynchronously, as shown in step five.
+Транзакция обновления начинается так же, как и транзакция запроса, но содержит на два шага 
+больше. Хотя приложения, обновляющие реестр, тоже подключаются к пиру для запуска чейнкода, в 
+отличие от приложений, запрашивающих реестр, пир не может в одиночку обновить реестр, поскольку 
+остальные пиры должны согласиться на изменениях, иначе **консенсус может быть не достигнут**. 
+Так, пиры возвращают **свое** подтверждение обновления, которое будет применено в случае согласия 
+всех остальных пиров. Первый дополнительный шаг --- четвертый --- требует, чтобы приложения 
+послали соответствующий набор предлагаемых обновлений всей сети пиров в виде транзакций для 
+сохранения в их реестры. Это достигается с использованием ordering-службы, упаковывающей 
+транзакции в блоки и распространяющей их по всей сети пиров, после чего их подтверждают перед 
+занесением в реестр. Процесс упорядочивания происходит какое-то время (порядка секунд), 
+приложение асинхронно уведомляется, как и показано на пятом шаге.
 
-Later in this section, you'll learn more about the detailed nature of this
-ordering process --- and for a really detailed look at this process see the
-[Transaction Flow](../txflow.html) topic.
+Позже в этом разделе вы узнаете больше о процессе упорядочивания --- но можете ознакомиться с 
+темой [Transaction Flow](../txflow.html) для более подробной информации.
 
-## Peers and Channels
+## Пиры и каналы
 
-Although this section is about peers rather than channels, it's worth spending a
-little time understanding how peers interact with each other, and with applications,
-via *channels* --- a mechanism by which a set of components within a blockchain
-network can communicate and transact *privately*.
+Хотя этот раздел скорее о пирах, чем о каналах, можно потратить немного времени, чтобы понять, 
+как пиры взаимодействуют друг с другом и приложениями с помощью *каналов* --- механизма, с 
+помощью которого набор компонент блокчейн-сети может коммуницировать и совершать транзакции 
+*конфиденциально*.
 
-These components are typically peer nodes, orderer nodes and applications and,
-by joining a channel, they agree to collaborate to collectively share and
-manage identical copies of the ledger associated with that channel. Conceptually, you can
-think of channels as being similar to groups of friends (though the members of a
-channel certainly don't need to be friends!). A person might have several groups
-of friends, with each group having activities they do together. These groups
-might be totally separate (a group of work friends as compared to a group of
-hobby friends), or there can be some crossover between them. Nevertheless, each group
-is its own entity, with "rules" of a kind.
+Этими компонентами обычно являются пиры, ordering-узлы и приложения. Присоединяясь к каналу, они 
+соглашаются совместно использовать и управлять идентичными копиями реестра этого канала. Можно 
+думать о канале как о группе друзей (хотя члены канала, конечно, не обязаны дружить). Человек 
+может иметь несколько групп друзей, с каждой из которых у него есть определенные занятия. Эти 
+группы могут быть как изолированы друг от друга (группа друзей по работе и группа школьных 
+друзей) или могут пересекаться. Тем не менее у каждой группы есть собственная структура и 
+своеобразные "правила".
 
 ![Peer5](./peers.diagram.5.png)
 
-*Channels allow a specific set of peers and applications to communicate with
-each other within a blockchain network. In this example, application A can
-communicate directly with peers P1 and P2 using channel C. You can think of the
-channel as a pathway for communications between particular applications and
-peers. (For simplicity, orderers are not shown in this diagram, but must be
-present in a functioning network.)*
+*Каналы позволяют определенной группе пиров и приложений клммуницировать друг с другом в 
+блокчейн-сети. В этом примере, приложение A может напрямую контактировать с пирами P1 и P2 при 
+помощи канала C. (Для простоты ordering-службы не показаны на нашей схеме, но в функционирующей 
+сети должны быть.)*
 
-We see that channels don't exist in the same way that peers do --- it's more
-appropriate to think of a channel as a logical structure that is formed by a
-collection of physical peers. *It is vital to understand this point --- peers
-provide the control point for access to, and management of, channels*.
+Важно понять, что пиры предоставляют "контрольный пункт" для доступа к каналам и управлению ими.
 
-## Peers and Organizations
+## Пиры и организации
 
-Now that you understand peers and their relationship to ledgers, chaincodes
-and channels, you'll be able to see how multiple organizations come together to
-form a blockchain network.
+Теперь, когда вы понимаете, что такое пиры и их отношения с реестром, чейнкодами и каналами, вы 
+сможете понять, как несколько организаций объединяются для формирования блокчейн-сети.
 
-Blockchain networks are administered by a collection of organizations rather
-than a single organization. Peers are central to how this kind of distributed
-network is built because they are owned by --- and are the connection points to
-the network for --- these organizations.
+Блокчейн-сети администрируются набором организаций, а не одной организацией. Пиры играют 
+центральную роль в создании такого рода распределенной сети, поскольку они принадлежат этим 
+организациям и служат для них точками соединения с сетью. 
 
 <a name="Peer8"></a>
 ![Peer8](./peers.diagram.8.png)
 
-*Peers in a blockchain network with multiple organizations. The blockchain
-network is built up from the peers owned and contributed by the different
-organizations. In this example, we see four organizations contributing eight
-peers to form a network. The channel C connects five of these peers in the
-network N --- P1, P3, P5, P7 and P8. The other peers owned by these
-organizations have not been joined to this channel, but are typically joined to
-at least one other channel. Applications that have been developed by a
-particular organization will connect to their own organization's peers as well
-as those of different organizations. Again,
-for simplicity, an orderer node is not shown in this diagram.*
+*Пиры в блокчейн-сети из нескольких организаций. Блокчейн-сеть состоит из пиров, принадлежащих 
+разным организациям. В нашем примере четыре организации предоставили восемь пиров для 
+формирования сети. Канал C объединяет пять из этих пиров сети N --- P1, P3, P5, P7 и P8. Другие 
+пиры, принадлежащие этим организациям не включены в канал, но, как правило, включены хотя бы в 
+один канал. Приложения, разработанные одной конкретной организацией подключаются к пирам своей 
+организации, а также пирам других организаций. Опять же, для простоты ordering-узла нет на этой 
+схеме.*
 
 It's really important that you can see what's happening in the formation of a
 blockchain network. *The network is both formed and managed by the multiple
