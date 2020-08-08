@@ -1,199 +1,165 @@
-# The Ordering Service
+# Ordering-служба
 
-**Audience:** Architects, ordering service admins, channel creators
+**Для кого это:** Архитекторы, администраторы ordering-службы, создатели каналов
 
-This topic serves as a conceptual introduction to the concept of ordering, how
-orderers interact with peers, the role they play in a transaction flow, and an
-overview of the currently available implementations of the ordering service,
-with a particular focus on the recommended **Raft** ordering service implementation.
+Этот раздел служит идейным вступлением в ordering, как ordering-службы взаимодействуют с пирами, 
+их роль в транзакционном потоке и обзор доступных в настоящее время реализаций ordering-службы, с 
+фокусом на рекомендованной реализации ordering-службы **Raft**.
 
-## What is ordering?
+## Что такое ordering (упорядочивание)?
 
-Many distributed blockchains, such as Ethereum and Bitcoin, are not permissioned,
-which means that any node can participate in the consensus process, wherein
-transactions are ordered and bundled into blocks. Because of this fact, these
-systems rely on **probabilistic** consensus algorithms which eventually
-guarantee ledger consistency to a high degree of probability, but which are
-still vulnerable to divergent ledgers (also known as a ledger "fork"), where
-different participants in the network have a different view of the accepted
-order of transactions.
+Многие распределенные блокчейны, такие как Ethereum и Bitcoin, являются permissionless, что 
+означает, что любой узел может участвовать в процессе консенсуса, когда транзакции 
+упорядочиваются и группируются в блоки. Поэтому эти системы полагаются на **вероятностные** 
+алгоритмы консенсуса, которые гарантируют высокую вероятность синхронизированности реестра, но 
+все еще уязвимы к проблеме расходящихся реестров (проблеме "форков" реестра), когда разные 
+участники сети имеют разные представления принятого порядка транзакций.
 
-Hyperledger Fabric works differently. It features a node called an
-**orderer** (it's also known as an "ordering node") that does this transaction
-ordering, which along with other orderer nodes forms an **ordering service**.
-Because Fabric's design relies on **deterministic** consensus algorithms, any block
-validated by the peer is guaranteed to be final and correct. Ledgers cannot fork
-the way they do in many other distributed and permissionless blockchain networks.
+Hyperledger Fabric работает по-другому. Он содержит узел, называемый ordering-узлом, который 
+упорядочивает транзакции и в совокупности с другими ordering-узлами формирует **ordering-
+службу**. Поскольку архитектура Fabric полагается на **детерминированные** алгоритмы консенсуса, 
+каждый блок проверенный пиром гарантированно корректен. В Hyperledger Fabric форк реестров не 
+может произойти, как в других распределенных permissionless блокчейн-сетях.
 
-In addition to promoting finality, separating the endorsement of chaincode
-execution (which happens at the peers) from ordering gives Fabric advantages
-in performance and scalability, eliminating bottlenecks which can occur when
-execution and ordering are performed by the same nodes.
+Кроме того разделение процессов подтверждения запуска чейнкодов и упорядочивания делает Fabric 
+более производительной и масштабируемой. 
 
-## Orderer nodes and channel configuration
+## Ordering-узлы и конфигурация канала
 
-In addition to their **ordering** role, orderers also maintain the list of
-organizations that are allowed to create channels. This list of organizations is
-known as the "consortium", and the list itself is kept in the configuration of
-the "orderer system channel" (also known as the "ordering system channel"). By
-default, this list, and the channel it lives on, can only be edited by the
-orderer admin. Note that it is possible for an ordering service to hold several
-of these lists, which makes the consortium a vehicle for Fabric multi-tenancy.
+В дополнение к **упорядочивающей** роли, ordering-узлы также поддерживают список организаций, 
+имеющих право создавать каналы. Этот список организаций называется **консорциум** и хранится в 
+конфигурации системного канала. По умолчанию этот список и канал, где он хранится, могут 
+редактироваться только администратором ordering-службы. Заметьте, что ordering-служба может 
+хранить несколько таких списков. Конфигурационные транзакции обрабатываются ordering-службой, 
+поскольку ей нужно знать текущий набор политик для контролирования доступа.
 
-Orderers also enforce basic access control for channels, restricting who can
-read and write data to them, and who can configure them. Remember that who
-is authorized to modify a configuration element in a channel is subject to the
-policies that the relevant administrators set when they created the consortium
-or the channel. Configuration transactions are processed by the orderer,
-as it needs to know the current set of policies to execute its basic
-form of access control. In this case, the orderer processes the
-configuration update to make sure that the requestor has the proper
-administrative rights. If so, the orderer validates the update request against
-the existing configuration, generates a new configuration transaction,
-and packages it into a block that is relayed to all peers on the channel. The
-peers then process the configuration transactions in order to verify that the
-modifications approved by the orderer do indeed satisfy the policies defined in
-the channel.
+Ordering-узлы также предоставляют базовый контроль доступа для каналов, ограничивая, кто может 
+читать и записывать данные, а также кто может их настраивать. Помните, что на тех, кому разрешено 
+изменять конфигурацию в канале, распространяется политика, установленная соответствующими 
+администраторами при создании консорциума или канала. Конфигурационные транзакции обрабатываются 
+ordering-службой, поскольку она должна знать текущий набор политик для контролирования доступа.
+В этих случаях ordering-узел обрабатывает обновление конфигурации, чтобы убедиться, что задавший 
+запрос обладает надлежащими администативными правами. Если это так, то ordering-служба проверяет 
+запрос обновления по существующей конфигурации, создает новую конфигурационную транзакцию и 
+упаковывает ее в блок, который передается всем пирам в канале. Пиры обрабатывают конфигурационную 
+транзакцию, чтобы проверить, что изменения, подтвержденные ordering-узлом действительно 
+соответствуют политикам, определенным в канале.
 
-## Orderer nodes and Identity
+## Orderering-узлы и Identity
 
+Все, взаимодействующее с блокчейн-сетью, в том числе пиры, приложения, администраторы, ordering-службы, получает identity их организации из определения Membership Service Provider (MSP)
 Everything that interacts with a blockchain network, including peers,
 applications, admins, and orderers, acquires their organizational identity from
 their digital certificate and their Membership Service Provider (MSP) definition.
 
-For more information about identities and MSPs, check out our documentation on
-[Identity](../identity/identity.html) and [Membership](../membership/membership.html).
+Чтобы узнать больше про identities и MSP, ознакомьтесь с нашей документацией про [Identity](../identity/identity.html) и [Membership](../membership/membership.html).
 
-Just like peers, ordering nodes belong to an organization. And similar to peers,
-a separate Certificate Authority (CA) should be used for each organization.
-Whether this CA will function as the root CA, or whether you choose to deploy
-a root CA and then intermediate CAs associated with that root CA, is up to you.
+Также как и пиры ordering-узлы принадлежат организациям. По аналогии с пирами, для каждой организации используются отдельные Certificate Authority (CA), будет ли он корневым или промежуточный, связанный с корнем, зависит от вас.
 
-## Orderers and the transaction flow
 
-### Phase one: Proposal
+## Orderering-служба и транзакционный поток
 
-We've seen from our topic on [Peers](../peers/peers.html) that they form the basis
-for a blockchain network, hosting ledgers, which can be queried and updated by
-applications through smart contracts.
+### Первая фаза: Proposal
 
-Specifically, applications that want to update the ledger are involved in a
-process with three phases that ensures all of the peers in a blockchain network
-keep their ledgers consistent with each other.
+Из темы про [пиры](../peers/peers.html) мы знаем, что они формируют основу блокчейн-сети, храня 
+реестры, которые приложения через смартконтракты запрашивают или обновляют.
 
-In the first phase, a client application sends a transaction proposal to
-a subset of peers that will invoke a smart contract to produce a proposed
-ledger update and then endorse the results. The endorsing peers do not apply
-the proposed update to their copy of the ledger at this time. Instead, the
-endorsing peers return a proposal response to the client application. The
-endorsed transaction proposals will ultimately be ordered into blocks in phase
-two, and then distributed to all peers for final validation and commit in
-phase three.
+В частности, приложения, которые хотят обновить реестр участвуют в процессе, состоящем из трех 
+этапов и обеспечивающим всем участникам блокчейн-сети синхронизированность их реестров.
 
-For an in-depth look at the first phase, refer back to the [Peers](../peers/peers.html#phase-1-proposal) topic.
+На первом шаге клиентское приложение посылает транзакционное proposal набору пиров, которые 
+запустят смартконтракты для создания предлагаемого обновления реестра и затем подтвердят 
+результаты. Подтверждающие пиры не применяют предложенное обновление к их копии реестра, а 
+возвращают ответ на proposal клиентскому приложению. Подтвержденные ответы на транзакционное 
+proposal будут в конечном счете упорядочены в блоки на втором этапе, а затем распространены среди 
+всех пиров сети для окончательной проверки и сохранения на третьем шаге.
 
-### Phase two: Ordering and packaging transactions into blocks
+Для более подробного описания первой фазы, ознакомьтесь с темой [пиры](../peers/peers.html#phase-1-proposal).
 
-After the completion of the first phase of a transaction, a client
-application has received an endorsed transaction proposal response from a set of
-peers. It's now time for the second phase of a transaction.
+### Вторая фаза: Упорядочивание и упаковка транзакций в блоки
 
-In this phase, application clients submit transactions containing endorsed
-transaction proposal responses to an ordering service node. The ordering service
-creates blocks of transactions which will ultimately be distributed to
-all peers on the channel for final validation and commit in phase three.
+После завершения первой фазы транзакции клиентское приложение получило подтвержденный ответ на 
+транзакционное proposal от набора пиров. Теперь наступает вторая фаза транзакции.
 
-Ordering service nodes receive transactions from many different application
-clients concurrently. These ordering service nodes work together to collectively
-form the ordering service. Its job is to arrange batches of submitted transactions
-into a well-defined sequence and package them into *blocks*. These blocks will
-become the *blocks* of the blockchain!
+На этой фазе клиентские приложения передают транзакции, содержащие одобренные ответы на 
+транзакционное proposal ordering-узлу. Ordering-служба создает блоки из транзакций, которые в 
+конечном счете будут распространены среди всех пиров для окончательной проверки и сохранения на 
+третьей фазе.
 
-The number of transactions in a block depends on channel configuration
-parameters related to the desired size and maximum elapsed duration for a
-block (`BatchSize` and `BatchTimeout` parameters, to be exact). The blocks are
-then saved to the orderer's ledger and distributed to all peers that have joined
-the channel. If a peer happens to be down at this time, or joins the channel
-later, it will receive the blocks after reconnecting to an ordering service
-node, or by gossiping with another peer. We'll see how this block is processed
-by peers in the third phase.
+Узлы ordering-службы одновременно получают транзакции от многих разных клиентских приложений. 
+Узлы ordering-службы работают вместе, в совокупности состовляя ordering-службу. Ее задача 
+заключается в том, чтобы сформировать из представленных им транзакций последовательность и 
+упаковать их в *блоки*, составляющие блокчейн.
+
+Количество транзакций в блоке зависит от параметров конфигурации канала, связанных с желаемым 
+размером и максимальной задержкой между блоками (а именно параметров `BatchSize` и 
+`BatchTimeout`). Блоки затем сохраняются в реестр ordering-службы и распространяются всем пирам, 
+присоединившихся к каналу. Если так получилось, что пир был не в сети или присоединился к каналу 
+позже, он получить блоки после повторного подключения к узлу ordering-службы или после общения по 
+gossip протоколу с другим пиром. Посмотрим, как пиры обработают этот блок на третьем этапе.
 
 ![Orderer1](./orderer.diagram.1.png)
 
-*The first role of an ordering node is to package proposed ledger updates. In
-this example, application A1 sends a transaction T1 endorsed by E1 and E2 to
-the orderer O1. In parallel, Application A2 sends transaction T2 endorsed by E1
-to the orderer O1. O1 packages transaction T1 from application A1 and
-transaction T2 from application A2 together with other transactions from other
-applications in the network into block B2. We can see that in B2, the
-transaction order is T1,T2,T3,T4,T6,T5 -- which may not be the order in which
-these transactions arrived at the orderer! (This example shows a very
-simplified ordering service configuration with only one ordering node.)*
+*Первой задачей ordering-узла является упаковка предложенных обновлений реестра. В нашем примере 
+приложение A1 посылает транзакцию T1, подтвержденную E1 и E2 ordering-узлу O1. Параллельно 
+приложение A2 посылает транзакцию T2, подтвержденную E1 ordering-узлу O1. O1 упаковывает T1 и T2 
+вместе с другими транзакциями от других приложений сети в блок B2. Можно видеть, что порядок 
+транзакций в B2 такой: T1,T2,T3,T4,T6,T5 -- что не обязательно является порядком, в котором они 
+прибыли в ordering-узел. (Этот пример показыает очень упрощенную конфигурацию ordering-службы с 
+единственным ordering-узлом.)*
 
-It's worth noting that the sequencing of transactions in a block is not
-necessarily the same as the order received by the ordering service, since there
-can be multiple ordering service nodes that receive transactions at approximately
-the same time.  What's important is that the ordering service puts the transactions
-into a strict order, and peers will use this order when validating and committing
-transactions.
+Важно заметить, что последовательность транзакций в блоке не обязательно упорядочена по времени 
+поступления в ordering-узел, поскольку может быть несколько узлов ordering-службы, которые 
+получают транзакции приблизительно в одно время. Ordering-служба строго упорядочивает транзакции, 
+и именно этот порядок будут использовать пиры при проверке и сохранении транзакций.
 
-This strict ordering of transactions within blocks makes Hyperledger Fabric a
-little different from other blockchains where the same transaction can be
-packaged into multiple different blocks that compete to form a chain.
-In Hyperledger Fabric, the blocks generated by the ordering service are
-**final**. Once a transaction has been written to a block, its position in the
-ledger is immutably assured. As we said earlier, Hyperledger Fabric's finality
-means that there are no **ledger forks** --- validated transactions will never
-be reverted or dropped.
+Строгий порядок транзакций в блоках отличает Hyperledger Fabric от других блокчейнов, где одни и 
+те же транзакции могут быть упакованы в несколько разных блоков, соревшующиеся за формирование 
+цепи. В Hyperledger Fabric блоки, сгенерированные ordering-службой, являются **окончательными**. 
+После того, как транзакция записывается в блок, ее позиция в реестре становится неизменяемой. 
+Окончательность Hyperledger Fabric означает, что не появляются **форки реестра** --- проверенные 
+транзакции никогда не аннулируются и не возвращаются.
 
-We can also see that, whereas peers execute smart contracts and process transactions,
-orderers most definitely do not. Every authorized transaction that arrives at an
-orderer is mechanically packaged in a block --- the orderer makes no judgement
-as to the content of a transaction (except for channel configuration transactions,
-as mentioned earlier).
+Мы также можем видеть, что, в отличие от пиров, ordering-узлы не обрабатывают транзакции и не 
+запускают смартконтракты. Каждая транзакция, приходящая к ordering-службе механически 
+упаковывается в блок --- ordering-узел не выносит сужденя о содержании транзакции (кроме 
+транзакций конфигурации канала).
 
-At the end of phase two, we see that orderers have been responsible for the simple
-but vital processes of collecting proposed transaction updates, ordering them,
-and packaging them into blocks, ready for distribution.
+Теперь мы знаем, что ordering-узлы ответственны за простые, но жизненно важные процессы сбора 
+предлагаемых обновлений реестра, их упорядочивание и упаковку в блоки, готовые к распространению. 
 
-### Phase three: Validation and commit
+### Третья фаза: Проверка и сохранение
 
-The third phase of the transaction workflow involves the distribution and
-subsequent validation of blocks from the orderer to the peers, where they can be
-committed to the ledger.
+Третья фаза транзакционного потока состоит из распространения и последующей проверки блоков, 
+после чего их можно сохранять в реестр.
 
-Phase 3 begins with the orderer distributing blocks to all peers connected to
-it. It's also worth noting that not every peer needs to be connected to an orderer ---
-peers can cascade blocks to other peers using the [**gossip**](../gossip.html)
-protocol.
+Третья фаза начинается с распространения блоков ordering-узлом всем пирам, подключенным к нему. 
+Важно заметить, что не каждый пир должен быть подключен к ordering-узлу --- пиры могут передавать 
+друг другу блоки с использованием [**gossip**](../gossip.html) протокола.
 
-Each peer will validate distributed blocks independently, but in a deterministic
-fashion, ensuring that ledgers remain consistent. Specifically, each peer in the
-channel will validate each transaction in the block to ensure it has been endorsed
-by the required organization's peers, that its endorsements match, and that
-it hasn't become invalidated by other recently committed transactions which may
-have been in-flight when the transaction was originally endorsed. Invalidated
-transactions are still retained in the immutable block created by the orderer,
-but they are marked as invalid by the peer and do not update the ledger's state.
+Каждый пир независимо проверяет распространенные ему блоки, но детерменировано, поскольку реестр 
+должен оставаться повсюду одинаковым. Говоря конкретнее, каждый пир в канале проверит все 
+транзакции блока, чтобы удостовериться в подтверждении пиров нужных организаций, что их 
+подтверждения совпадают, и что они не утратили валидность после недавно сохраненных транзакций, 
+выполнявшихся во время подтверждения. Аннулированные транзакции сохранены в неизменяемом блоке, 
+созданном ordering-службой, но помечены, как невалидные пирами и не обновляют состояние реестра.
 
 ![Orderer2](./orderer.diagram.2.png)
 
-*The second role of an ordering node is to distribute blocks to peers. In this
-example, orderer O1 distributes block B2 to peer P1 and peer P2. Peer P1
-processes block B2, resulting in a new block being added to ledger L1 on P1. In
-parallel, peer P2 processes block B2, resulting in a new block being added to
-ledger L1 on P2. Once this process is complete, the ledger L1 has been
-consistently updated on peers P1 and P2, and each may inform connected
-applications that the transaction has been processed.*
+*Второй задачей ordering-узла является распространение блоков пирамю В нашем примере ordering-
+узел O1 распространяет блок B2 пиру P1 и пиру P2. Пир P1
+обрабатывает блок B2, добавляет новый блок в свою копию реестра L1. Параллельно пир P2 
+обрабатывает блок B2, добавляет новый блок в свою копию реестра L1. По завершению процесса реестр 
+L1 обновлен одинаково на обоих пирах P1 и P2, и каждый из них может передать подключенному к нему 
+приложению, что транзакции были обработаны.*
 
-In summary, phase three sees the blocks generated by the ordering service applied
-consistently to the ledger. The strict ordering of transactions into blocks
-allows each peer to validate that transaction updates are consistently applied
-across the blockchain network.
+По итогу в третьей фазе блоки, созданные ordering-службой, равномерно добавляются в реестр. 
+Строгий порядок транзакций в блоках позволяет каждому пиру проверять, что транзакции обновления 
+равномерно добавляются повсюду в блокчейн-сети.
 
-For a deeper look at phase 3, refer back to the [Peers](../peers/peers.html#phase-3-validation-and-commit) topic.
+Для более подробной информации вернитесь к теме про [пиров](../peers/peers.html#phase-3-validation-and-commit).
 
-## Ordering service implementations
+## Реализации ordering-служб
 
 While every ordering service currently available handles transactions and
 configuration updates the same way, there are nevertheless several different
