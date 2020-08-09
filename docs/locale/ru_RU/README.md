@@ -38,20 +38,20 @@ The original online documentation is: http://hyperledger-fabric.readthedocs.io/
 - [x] Introduction (edited)
 - [ ] What’s new in Hyperledger Fabric v2.x
 - [ ] Release notes
-- [ ] Key Concepts
+- [x] Key Concepts
     - [x] Introduction (edited)
     - [x] Hyperledger Fabric Model (edited)
     - [x] Blockchain network (edited)
     - [x] Identity (edited)
     - [x] Membership Service Provider (MSP) (edited)
     - [x] Policies
-    - [ ] Peers
+    - [x] Peers
     - [x] Ledger (edited)
-    - [ ] The Ordering Service
+    - [x] The Ordering Service
     - [x] Smart Contracts and Chaincode
-    - [ ] Fabric chaincode lifecycle
+    - [x] Fabric chaincode lifecycle
     - [x] Private data
-    - [ ] Channel capabilities
+    - [x] Channel capabilities
     - [x] Use Cases
 - [ ] Getting Started
 - [ ] Developing Applications

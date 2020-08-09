@@ -81,14 +81,14 @@ S2.*
 ## Приложения и пиры
 
 Сейчас мы увидим, как приложения взаимодействуют с пирами, если хотят получить доступ к реестру. 
-Взаимодействия типа запрос в реестр состоят из трехступенчатого диалога между пиром и 
+Взаимодействия типа поискового запроса в реестр состоят из трехступенчатого диалога между пиром и 
 приложением, взаимодействия типа обновления требуют на два шага больше. Мы упростили эти шаги, 
 чтобы упростить вам начало работы с Fabric, но не волнуйтесь --- самое важное --- понять разницу 
 между запросами в реестр и обновлениями реестра.
 
 Приложения подключаются к пирам, когда им нужен доступ к реестрам и чейнкодам. Fabric Software 
 Development Kit (SDK) упрощает это для программистов --- его API позволяет приложениям 
-подключаться к пирам, запускать чейнкоды для генерации транзакций, распространять в сеть 
+подключаться к пирам, запускать чейнкоды для создания транзакций, распространять в сеть 
 транзакции, которые впоследствии будут упорядочены, проверены и сохранены в распределенный 
 реестр, и получать информацию о событиях после завершения этого процесса.
 
@@ -174,300 +174,142 @@ proposal на обновление реестра. Приложение A пол
 организации, а также пирам других организаций. Опять же, для простоты ordering-узла нет на этой 
 схеме.*
 
-It's really important that you can see what's happening in the formation of a
-blockchain network. *The network is both formed and managed by the multiple
-organizations who contribute resources to it.* Peers are the resources that
-we're discussing in this topic, but the resources an organization provides are
-more than just peers. There's a principle at work here --- the network literally
-does not exist without organizations contributing their individual resources to
-the collective network. Moreover, the network grows and shrinks with the
-resources that are provided by these collaborating organizations.
+Важно понять, что именно происходит во время образования блокчейн-сети.
+*Сеть формируется и управляется несколькими организациями, которые вносят в нее ресурсы*.
+Пиры --- это тоже ресурсы. Сеть просто не существует без организаций, их ресурсы ее образуют.
 
-You can see that (other than the ordering service) there are no centralized
-resources --- in the [example above](#Peer8), the network, **N**, would not exist
-if the organizations did not contribute their peers. This reflects the fact that
-the network does not exist in any meaningful sense unless and until
-organizations contribute the resources that form it. Moreover, the network does
-not depend on any individual organization --- it will continue to exist as long
-as one organization remains, no matter which other organizations may come and
-go. This is at the heart of what it means for a network to be decentralized.
+Приложения разных организаций, как на [примере выше](#Peer8), могут отличаться, потому что
+только сама организация решает, как ее приложению использовать копии реестра пиров организации.
 
-Applications in different organizations, as in the [example above](#Peer8), may
-or may not be the same. That's because it's entirely up to an organization as to how
-its applications process their peers' copies of the ledger. This means that both
-application and presentation logic may vary from organization to organization
-even though their respective peers host exactly the same ledger data.
+Приложения могут соединяться с пирами их организации или пирами другой, в зависимости от случая.
+Для поисковых запросов по реестру, приложения обычно соединяются к пирам своей организации.
+Для запросов обновления реестра, приложения должны соединится  пирами всех таких организаций, подтверждение
+от которых требуется для удовлетворения политики подтверждения.
 
-Applications connect either to peers in their organization, or peers in another
-organization, depending on the nature of the ledger interaction that's required.
-For ledger-query interactions, applications typically connect to their own
-organization's peers. For ledger-update interactions, we'll see later why
-applications need to connect to peers representing *every* organization that is
-required to endorse the ledger update.
+## Пиры и Identity
 
-## Peers and Identity
+После того, как вы увидели, как пиры разных организаций объединяются для формирования
+блокчейн-сети, следует понять, как пиры были назначены организациям администраторами этих организаций.
 
-Now that you've seen how peers from different organizations come together to
-form a blockchain network, it's worth spending a few moments understanding how
-peers get assigned to organizations by their administrators.
-
-Peers have an identity assigned to them via a digital certificate from a
-particular certificate authority. You can read lots more about how X.509
-digital certificates work elsewhere in this guide but, for now, think of a
-digital certificate as being like an ID card that provides lots of verifiable
-information about a peer. *Each and every peer in the network is assigned a
-digital certificate by an administrator from its owning organization*.
+Все пиры имеют identity, назначенную им администратором организации через цифровой сертификат от определенного CA.
 
 ![Peer9](./peers.diagram.9.png)
 
-*When a peer connects to a channel, its digital certificate identifies its
-owning organization via a channel MSP. In this example, P1 and P2 have
-identities issued by CA1. Channel C determines from a policy in its channel
-configuration that identities from CA1 should be associated with Org1 using
-ORG1.MSP. Similarly, P3 and P4 are identified by ORG2.MSP as being part of
-Org2.*
+*Когда пир подсоединяется к каналу, его цифровой сертификат идентифицирует владеющую им организацию через MSP канала.
+В этом примере P1 и P2 имеют identities, выпущенные CA1. Канал C через политику из конфигурации C, что identities,
+выпущенные CA1, должны быть связаны с Org1 через ORG1.MSP. Аналогично, P3 и P4 идентифицируются через
+ORG2.MSP.*
 
-Whenever a peer connects using a channel to a blockchain network, *a policy in
-the channel configuration uses the peer's identity to determine its
-rights.* The mapping of identity to organization is provided by a component
-called a *Membership Service Provider* (MSP) --- it determines how a peer gets
-assigned to a specific role in a particular organization and accordingly gains
-appropriate access to blockchain resources. Moreover, a peer can be owned only
-by a single organization, and is therefore associated with a single MSP. We'll
-learn more about peer access control later in this section, and there's an entire
-section on MSPs and access control policies elsewhere in this guide. But for now,
-think of an MSP as providing linkage between an individual identity and a
-particular organizational role in a blockchain network.
+Каждый раз, когда пир соединяется через канал с блокчейн-сетью, *политика из конфигурации канала
+использует identity пира, чтобы определить его права*. Соответствие identity -> организация
+задается с помощью компонента под названием *Membership Service Provider* (MSP) --- этот компонент
+определяет роль identity (пир, администратор, ...), и, соответственно, его права на ресурсы сети.
 
-To digress for a moment, peers as well as *everything that interacts with a
-blockchain network acquire their organizational identity from their digital
-certificate and an MSP*. Peers, applications, end users, administrators and
-orderers must have an identity and an associated MSP if they want to interact
-with a blockchain network. *We give a name to every entity that interacts with
-a blockchain network using an identity --- a principal.* You can learn lots
-more about principals and organizations elsewhere in this guide, but for now
-you know more than enough to continue your understanding of peers!
+Пиром может владеть только одна организация и, следовательно, он может соответствовать только одному MSP.
 
-Finally, note that it's not really important where the peer is physically
-located --- it could reside in the cloud, or in a data centre owned by one
-of the organizations, or on a local machine --- it's the digital certificate
-associated with it that identifies it as being owned by a particular organization.
-In our example above, P3 could be hosted in Org1's data center, but as long as the
-digital certificate associated with it is issued by CA2, then it's owned by
-Org2.
+Физическое местоположение пира не важно --- это может быть, например, облако или датацентр организации ---
+важен его цифровой сертификат. В примере выше, P3 может размещен на сервере Org1, но если он связан с
+сертификатом, выданным CA2, им владеет Org2.
 
-## Peers and Orderers
+## Пиры и ордереры
 
-We've seen that peers form the basis for a blockchain network, hosting ledgers
-and smart contracts which can be queried and updated by peer-connected applications.
-However, the mechanism by which applications and peers interact with each other
-to ensure that every peer's ledger is kept consistent with each other is mediated
-by special nodes called *orderers*, and it's to these nodes we now turn our
-attention.
+Мы обсудили, как пиры формируют базу блокчейн-сети и как приложения могут обновлять реестр пира
+и искать по нему. Но мы не затронули механизм, с помощью которого реестры пиров канала
+поддерживаются синхронизированными друг с другом. Этот механизм работает через
+специальные узлы, *ордереры*.
 
-An update transaction is quite different from a query transaction because a single
-peer cannot, on its own, update the ledger --- updating requires the consent of other
-peers in the network. A peer requires other peers in the network to approve a
-ledger update before it can be applied to a peer's local ledger. This process is
-called *consensus*, which takes much longer to complete than a simple query. But when
-all the peers required to approve the transaction    do so, and the transaction is
-committed to the ledger, peers will notify their connected applications that the
-ledger has been updated. You're about to be shown a lot more detail about how
-peers and orderers manage the consensus process in this section.
+Транзакция обновления реестра отличается от транзакции запроса, так как один пир не может
+самостоятельно обновить реестр канала --- надо согласовать это обновление со всеми
+остальными пирами перед тем, как можно занести изменение в локальный реестр. После того, как
+изменение согласовано с пирами, оно сохраняется в реестр, и тогда пиры уведомляют
+приложения о том, что реестр был обновлен.
 
-Specifically, applications that want to update the ledger are involved in a
-3-phase process, which ensures that all the peers in a blockchain network keep
-their ledgers consistent with each other. 
+Приложения, которые хотят обновить реестр, вовлечены в следующий процесс:
 
-* In the first phase, applications work with a subset of *endorsing peers*, each of
-  which provide an endorsement of the proposed ledger update to the application,
-  but do not apply the proposed update to their copy of the ledger.
-* In the second phase, these separate endorsements are collected together
-  as transactions and packaged into blocks.
-* In the third and final phase, these blocks are distributed back to every peer where
-  each transaction is validated before being committed to that peer's copy of the ledger.
+1. Сначала приложения работают с *подтверждающими пирами*, каждый из которых
+   дает подтверждение (endorsement) предложения (proposal) об изменении реестра, но они не обновляют свой реестр.
+2. Подтверждения включаются вместе с обновлением в одну транзакцию, которая попадает в новый блок.
+3. Эти блоки распространяются каждому пиру, каждый их которых проверяет каждую транзакцию, а потом обновляет свою копию реестра.
 
-As you will see, orderer nodes are central to this process, so let's
-investigate in a little more detail how applications and peers use orderers to
-generate ledger updates that can be consistently applied to a distributed,
-replicated ledger.
+Ордеринг-узлы играют важную роль в этом процессе, так что давайте разберем его в
+деталях, чтобы понять, как же с помощью ордереров достигается распределенность и 
+синхронизированность реестра.
 
-### Phase 1: Proposal
+### Первая фаза: Proposal
 
-Phase 1 of the transaction workflow involves an interaction between an
-application and a set of peers --- it does not involve orderers. Phase 1 is only
-concerned with an application asking different organizations' endorsing peers to
-agree to the results of the proposed chaincode invocation.
+Эта фаза никак не задействует ордереры, на ней происходит взаимодействие между
+приложением и набором пиров. 
 
-To start phase 1, applications generate a transaction proposal which they send
-to each of the required set of peers for endorsement. Each of these *endorsing peers* then
-independently executes a chaincode using the transaction proposal to
-generate a transaction proposal response. It does not apply this update to the
-ledger, but rather simply signs it and returns it to the application. Once the
-application has received a sufficient number of signed proposal responses,
-the first phase of the transaction flow is complete. Let's examine this phase in
-a little more detail.
+Чтобы начать первую фазу, приложение создает transaction proposal (предложение о транзакции) и 
+посылает его необходимому набору пиров на подтверждение. Каждый из этих *подтверждающих пиров*
+самостоятельно исполняет чейнкод и создает transaction proposal response (ответ). Он не
+обновляет реестр, а только подписывает обновление и возвращает его приложению.
+Как только приложение получило достаточное количество proposal responses,
+Первая фаза транзакционного потока завершена.
 
 ![Peer10](./peers.diagram.10.png)
 
-*Transaction proposals are independently executed by peers who return endorsed
-proposal responses. In this example, application A1 generates transaction T1
-proposal P which it sends to both peer P1 and peer P2 on channel C. P1 executes
-S1 using transaction T1 proposal P generating transaction T1 response R1 which
-it endorses with E1. Independently, P2 executes S1 using transaction T1
-proposal P generating transaction T1 response R2 which it endorses with E2.
-Application A1 receives two endorsed responses for transaction T1, namely E1
-and E2.*
+*Приложение A1 создает proposal P1 транзакции T1, вызывающий смартконтракт S1 с определенными аргументами. A1 посылает P пирам P1 и P2. 
+P1 исполняет S1 с аргументами из P и создает repsonse R1 с созданным пиром подтверждением, E1. 
+В это же время P2 аналогично создает R2 с E2. Приложение A1 получает R1 и R2.*
 
-Initially, a set of peers are chosen by the application to generate a set of
-proposed ledger updates. Which peers are chosen by the application? Well, that
-depends on the *endorsement policy* (defined for a chaincode), which defines
-the set of organizations that need to endorse a proposed ledger change before it
-can be accepted by the network. This is literally what it means to achieve
-consensus --- every organization who matters must have endorsed the proposed
-ledger change *before* it will be accepted onto any peer's ledger.
+Набор пиров, которым необходимо подтвердить транзакцию для того, чтобы ее включили в реестры все пиры канала, указан в политике подтверждения
+определенного чейнкода
 
-A peer endorses a proposal response by adding its digital signature, and signing
-the entire payload using its private key. This endorsement can be subsequently
-used to prove that this organization's peer generated a particular response. In
-our example, if peer P1 is owned by organization Org1, endorsement E1
-corresponds to a digital proof that "Transaction T1 response R1 on ledger L1 has
-been provided by Org1's peer P1!".
+Пир подтверждает proposal response своей цифровой подписью всех данных response.
+Это подтверждение служит доказательством того, что
+пир действительно создал этот response.
 
-Phase 1 ends when the application receives signed proposal responses from
-sufficient peers. We note that different peers can return different and
-therefore inconsistent transaction responses to the application *for the same
-transaction proposal*. It might simply be that the result was generated at
-different times on different peers with ledgers at different states, in which
-case an application can simply request a more up-to-date proposal response. Less
-likely, but much more seriously, results might be different because the chaincode
-is *non-deterministic*. Non-determinism is the enemy of chaincodes
-and ledgers and if it occurs it indicates a serious problem with the proposed
-transaction, as inconsistent results cannot, obviously, be applied to ledgers.
-An individual peer cannot know that their transaction result is
-non-deterministic --- transaction responses must be gathered together for
-comparison before non-determinism can be detected. (Strictly speaking, even this
-is not enough, but we defer this discussion to the transaction section, where
-non-determinism is discussed in detail.)
+Фаза 1 заканчивается, когда приложение получает достаточное количество responses.
+Разные пиры могут вернуть разные и, соответственно, не согласующиеся ответы *для одного и того же proposal*.
+Это может случится из-за того, что пиры выполняли чейнкод в разные моменты времени с разным состоянием реестра,
+или потому что чейнкод *не детерминирован*. 
 
-At the end of phase 1, the application is free to discard inconsistent
-transaction responses if it wishes to do so, effectively terminating the
-transaction workflow early. We'll see later that if an application tries to use
-an inconsistent set of transaction responses to update the ledger, it will be
-rejected.
+Если в конце фазы 1 приложение обнаружит, что responses расходятся, то оно может либо прервать транзакционный поток, либо
+продолжить, но тогда ордеринг-служба отвергнет обновление.
 
-### Phase 2: Ordering and packaging transactions into blocks
+### Вторая фаза: упорядочивание и упаковка транзакций в блоки
 
-The second phase of the transaction workflow is the packaging phase. The orderer
-is pivotal to this process --- it receives transactions containing endorsed
-transaction proposal responses from many applications, and orders the
-transactions into blocks. For more details about the
-ordering and packaging phase, check out our
-[conceptual information about the ordering phase](../orderer/ordering_service.html#phase-two-ordering-and-packaging-transactions-into-blocks).
+Ордереры получают транзакции с подтвержденными responses от разных приложений, устанавливают строгий
+порядок транзакций и упаковывает их в блоки. Более подробно эта фаза описана
+[тут](../orderer/ordering_service.html#вторая-фаза-упорядочивание-и-упаковка-транзакций-в-блоки).
 
-### Phase 3: Validation and commit
+### Третья фаза: Проверка и сохранение
 
-At the end of phase 2, we see that orderers have been responsible for the simple
-but vital processes of collecting proposed transaction updates, ordering them,
-and packaging them into blocks, ready for distribution to the peers.
-
-The final phase of the transaction workflow involves the distribution and
-subsequent validation of blocks from the orderer to the peers, where they can be
-committed to the ledger. Specifically, at each peer, every transaction within a
-block is validated to ensure that it has been consistently endorsed by all
-relevant organizations before it is committed to the ledger. Failed transactions
-are retained for audit, but are not committed to the ledger.
+Последняя фаза транзакционного потока включает распространение блоков пирам проверку
+блоков пирами. Каждый пир проверяет каждую транзакцию.
 
 ![Peer12](./peers.diagram.12.png)
 
-*The second role of an orderer node is to distribute blocks to peers. In this
-example, orderer O1 distributes block B2 to peer P1 and peer P2. Peer P1
-processes block B2, resulting in a new block being added to ledger L1 on P1.
-In parallel, peer P2 processes block B2, resulting in a new block being added
-to ledger L1 on P2. Once this process is complete, the ledger L1 has been
-consistently updated on peers P1 and P2, and each may inform connected
-applications that the transaction has been processed.*
+*Вторая роль ordering-узла: распространение блоков пирам. O1 распространяет блок B2
+P1 и P2. P1 обрабатывает B2 и включает его в свою копию L1. То же самое делает P2.
+После этого L1 был обновлен и согласован на P1 и P2.*
 
-Phase 3 begins with the orderer distributing blocks to all peers connected to
-it. Peers are connected to orderers on channels such that when a new block is
-generated, all of the peers connected to the orderer will be sent a copy of the
-new block. Each peer will process this block independently, but in exactly the
-same way as every other peer on the channel. In this way, we'll see that the
-ledger can be kept consistent. It's also worth noting that not every peer needs
-to be connected to an orderer --- peers can cascade blocks to other peers using
-the **gossip** protocol, who also can process them independently. But let's
-leave that discussion to another time!
+Не каждый пир должен получить блок напрямую от ордерера, они могут получить его
+от других пиров по gossip-протоколу.
 
-Upon receipt of a block, a peer will process each transaction in the sequence in
-which it appears in the block. For every transaction, each peer will verify that
-the transaction has been endorsed by the required organizations according to the
-*endorsement policy* of the chaincode which generated the transaction. For
-example, some transactions may only need to be endorsed by a single
-organization, whereas others may require multiple endorsements before they are
-considered valid. This process of validation verifies that all relevant
-organizations have generated the same outcome or result. Also note that this
-validation is different than the endorsement check in phase 1, where it is the
-application that receives the response from endorsing peers and makes the
-decision to send the proposal transactions. In case the application violates
-the endorsement policy by sending wrong transactions, the peer is still able to
-reject the transaction in the validation process of phase 3.
+По получению блока, пир начнет обрабатывать транзакции в том порядке, в каком они указаны в блоке.
+Обрабатывая транзакцию, пир сначала проверит, что все подтверждения к response подлинны и их достаточно
+для удовлетворения политики подтверждения.
 
-If a transaction has been endorsed correctly, the peer will attempt to apply it
-to the ledger. To do this, a peer must perform a ledger consistency check to
-verify that the current state of the ledger is compatible with the state of the
-ledger when the proposed update was generated. This may not always be possible,
-even when the transaction has been fully endorsed. For example, another
-transaction may have updated the same asset in the ledger such that the
-transaction update is no longer valid and therefore can no longer be applied. In
-this way, the ledger is kept consistent across each peer in the channel because
-they each follow the same rules for validation.
+Если транзакция подтверждена, то пир попытается применить ее к реестру. Он проверяет, что
+текущее состояние реестра совместимо с состоянием реестра на момент запуска чейнкода. Например, 
+если другая транзакция обновила тот же актив и стоит раньше в блоке, то текущая транзакция
+невалидна.
 
-After a peer has successfully validated each individual transaction, it updates
-the ledger. Failed transactions are not applied to the ledger, but they are
-retained for audit purposes, as are successful transactions. This means that
-peer blocks are almost exactly the same as the blocks received from the orderer,
-except for a valid or invalid indicator on each transaction in the block.
+После того, как пир проверил каждую транзакцию, он обновляет реестр. Невалидные транзакции
+не обновляют реестр, но они сохраняются в целях аудита, как и валидные транзакции. Это значит, что
+блоки, которые хранят пиры --- это блоки от ордеринг-службы, но с полем валидности транзакции.
 
-We also note that phase 3 does not require the running of chaincodes --- this is
-done only during phase 1, and that's important. It means that chaincodes only have
-to be available on endorsing nodes, rather than throughout the blockchain
-network. This is often helpful as it keeps the logic of the chaincode
-confidential to endorsing organizations. This is in contrast to the output of
-the chaincodes (the transaction proposal responses) which are shared with every
-peer in the channel, whether or not they endorsed the transaction. This
-specialization of endorsing peers is designed to help scalability and confidentiality.
+Фаза 3 и фаза 2 не исполняют чейнкод. Это означает, что чейнкод должен быть установлен только
+на подтверждающих пирах. Это полезно, так как логику исполнения чейнкода знают только подтверждающие организации. Отделение
+подтверждающих пиров способствует масштабируемости и конфиденциальности.
 
-Finally, every time a block is committed to a peer's ledger, that peer
-generates an appropriate *event*. *Block events* include the full block content,
-while *block transaction events* include summary information only, such as
-whether each transaction in the block has been validated or invalidated.
-*Chaincode* events that the chaincode execution has produced can also be
-published at this time. Applications can register for these event types so
-that they can be notified when they occur. These notifications conclude the
-third and final phase of the transaction workflow.
-
-In summary, phase 3 sees the blocks which are generated by the orderer
-consistently applied to the ledger. The strict ordering of transactions into
-blocks allows each peer to validate that transaction updates are consistently
-applied across the blockchain network.
-
-### Orderers and Consensus
-
-This entire transaction workflow process is called *consensus* because all peers
-have reached agreement on the order and content of transactions, in a process
-that is mediated by orderers. Consensus is a multi-step process and applications
-are only notified of ledger updates when the process is complete --- which may
-happen at slightly different times on different peers.
-
-We will discuss orderers in a lot more detail in a future orderer topic, but for
-now, think of orderers as nodes which collect and distribute proposed ledger
-updates from applications for peers to validate and include on the ledger.
-
-That's it! We've now finished our tour of peers and the other components that
-they relate to in Fabric. We've seen that peers are in many ways the
-most fundamental element --- they form the network, host chaincodes and the
-ledger, handle transaction proposals and responses, and keep the ledger
-up-to-date by consistently applying transaction updates to it.
+Каждый раз когда пир сохраняет блок в свой реестр, он создает соответствующее *событие* (event).
+*Block events* (события о создании блока) включают все содержимое блока, а *block transaction events*
+включают только общую информацию, такую как валидность транзакций. *События, произведенные
+во время выполнения чейнкода* (chaincode events) также могут быть посланы на этом этапе.
+Приложения могут подписаться на рассылку определенных типов событий.
 
 <!--- Licensed under Creative Commons Attribution 4.0 International License
 https://creativecommons.org/licenses/by/4.0/) -->

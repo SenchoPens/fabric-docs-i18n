@@ -64,14 +64,13 @@ their digital certificate and their Membership Service Provider (MSP) definition
 Из темы про [пиры](../peers/peers.html) мы знаем, что они формируют основу блокчейн-сети, храня 
 реестры, которые приложения через смартконтракты запрашивают или обновляют.
 
-В частности, приложения, которые хотят обновить реестр участвуют в процессе, состоящем из трех 
+В частности, приложения, которые хотят обновить реестр, участвуют в процессе, состоящем из трех 
 этапов и обеспечивающим всем участникам блокчейн-сети синхронизированность их реестров.
 
 На первом шаге клиентское приложение посылает транзакционное proposal набору пиров, которые 
 запустят смартконтракты для создания предлагаемого обновления реестра и затем подтвердят 
 результаты. Подтверждающие пиры не применяют предложенное обновление к их копии реестра, а 
-возвращают ответ на proposal клиентскому приложению. Подтвержденные ответы на транзакционное 
-proposal будут в конечном счете упорядочены в блоки на втором этапе, а затем распространены среди 
+возвращают ответ на proposal клиентскому приложению. Подтвержденные ответы будут в конечном счете упорядочены в блоки на втором этапе, а затем распространены среди 
 всех пиров сети для окончательной проверки и сохранения на третьем шаге.
 
 Для более подробного описания первой фазы, ознакомьтесь с темой [пиры](../peers/peers.html#phase-1-proposal).
@@ -135,9 +134,9 @@ gossip протоколу с другим пиром. Посмотрим, как
 
 Третья фаза начинается с распространения блоков ordering-узлом всем пирам, подключенным к нему. 
 Важно заметить, что не каждый пир должен быть подключен к ordering-узлу --- пиры могут передавать 
-друг другу блоки с использованием [**gossip**](../gossip.html) протокола.
+друг другу блоки с использованием [**gossip-протокола**](../gossip.html).
 
-Каждый пир независимо проверяет распространенные ему блоки, но детерменировано, поскольку реестр 
+Каждый пир независимо проверяет распространенные ему блоки, но проверка детерменирована, поскольку реестр 
 должен оставаться повсюду одинаковым. Говоря конкретнее, каждый пир в канале проверит все 
 транзакции блока, чтобы удостовериться в подтверждении пиров нужных организаций, что их 
 подтверждения совпадают, и что они не утратили валидность после недавно сохраненных транзакций, 
@@ -244,77 +243,20 @@ open-source developer of Kafka, not Hyperledger Fabric. The Fabric Raft implemen
 on the other hand, has been developed and will be supported within the Fabric
 developer community and its support apparatus.
 
-* Where Kafka uses a pool of servers (called "Kafka brokers") and the admin of
-the orderer organization specifies how many nodes they want to use on a
-particular channel, Raft allows the users to specify which ordering nodes will
-be deployed to which channel. In this way, peer organizations can make sure
-that, if they also own an orderer, this node will be made a part of a ordering
-service of that channel, rather than trusting and depending on a central admin
-to manage the Kafka nodes.
+* В то время, как Kafka использует пул серверов (называемых "Kafka brokers") и администратор
+ордеринг-службы решает, сколько узлов он хочет использовать в конкретном канале, а Raft
+позволяет пользователям канала указать, какие ордеринг-узлы будут использоваться в канале.
+Таким образом, организациям не обязательно доверять администратору Kafka-узлов.
 
-* Raft is the first step toward Fabric's development of a byzantine fault tolerant
-(BFT) ordering service. As we'll see, some decisions in the development of
-Raft were driven by this. If you are interested in BFT, learning how to use
-Raft should ease the transition.
+* Raft --- первый шаг Fabric к BFT ордеринг-службе.
 
-For all of these reasons, support for Kafka-based ordering service is being
-deprecated in Fabric v2.x.
+По этим причинам, поддержка Kafka прекращается в Fabric v2.x.
 
-Note: Similar to Solo and Kafka, a Raft ordering service can lose transactions
-after acknowledgement of receipt has been sent to a client. For example, if the
-leader crashes at approximately the same time as a follower provides
-acknowledgement of receipt. Therefore, application clients should listen on peers
-for transaction commit events regardless (to check for transaction validity), but
-extra care should be taken to ensure that the client also gracefully tolerates a
-timeout in which the transaction does not get committed in a configured timeframe.
-Depending on the application, it may be desirable to resubmit the transaction or
-collect a new set of endorsements upon such a timeout.
+### Терминология Raft
 
-### Raft concepts
-
-While Raft offers many of the same features as Kafka --- albeit in a simpler and
-easier-to-use package --- it functions substantially different under the covers
-from Kafka and introduces a number of new concepts, or twists on existing
-concepts, to Fabric.
-
-**Log entry**. The primary unit of work in a Raft ordering service is a "log
-entry", with the full sequence of such entries known as the "log". We consider
-the log consistent if a majority (a quorum, in other words) of members agree on
-the entries and their order, making the logs on the various orderers replicated.
-
-**Consenter set**. The ordering nodes actively participating in the consensus
-mechanism for a given channel and receiving replicated logs for the channel.
-This can be all of the nodes available (either in a single cluster or in
-multiple clusters contributing to the system channel), or a subset of those
-nodes.
-
-**Finite-State Machine (FSM)**. Every ordering node in Raft has an FSM and
-collectively they're used to ensure that the sequence of logs in the various
-ordering nodes is deterministic (written in the same sequence).
-
-**Quorum**. Describes the minimum number of consenters that need to affirm a
-proposal so that transactions can be ordered. For every consenter set, this is a
-**majority** of nodes. In a cluster with five nodes, three must be available for
-there to be a quorum. If a quorum of nodes is unavailable for any reason, the
-ordering service cluster becomes unavailable for both read and write operations
-on the channel, and no new logs can be committed.
-
-**Leader**. This is not a new concept --- Kafka also uses leaders, as we've said ---
-but it's critical to understand that at any given time, a channel's consenter set
-elects a single node to be the leader (we'll describe how this happens in Raft
-later). The leader is responsible for ingesting new log entries, replicating
-them to follower ordering nodes, and managing when an entry is considered
-committed. This is not a special **type** of orderer. It is only a role that
-an orderer may have at certain times, and then not others, as circumstances
-determine.
-
-**Follower**. Again, not a new concept, but what's critical to understand about
-followers is that the followers receive the logs from the leader and
-replicate them deterministically, ensuring that logs remain consistent. As
-we'll see in our section on leader election, the followers also receive
-"heartbeat" messages from the leader. In the event that the leader stops
-sending those message for a configurable amount of time, the followers will
-initiate a leader election and one of them will be elected the new leader.
+Хотя внешне Raft имеет много общего с Kafka, его реализация многим отличается и оперирует несколько
+другими понятиями: [записи журнала](../glossary#log-entry), [Consenter set](../glossary#consenter-set),
+[Кворум](../glossary#quorum), [Лидер](../glossary#leader), [Подписчик](../glossary#follower).
 
 ### Raft in a transaction flow
 
@@ -377,30 +319,20 @@ therefore receive block `180` from `L` and then make a `Deliver` request for
 blocks `101` to `180`. Blocks `180` to `196` would then be replicated to `R1`
 through the normal Raft protocol.
 
-### Kafka (deprecated in v2.x)
+### Kafka
 
-The other crash fault tolerant ordering service supported by Fabric is an
-adaptation of a Kafka distributed streaming platform for use as a cluster of
-ordering nodes. You can read more about Kafka at the [Apache Kafka Web site](https://kafka.apache.org/intro),
-but at a high level, Kafka uses the same conceptual "leader and follower"
-configuration used by Raft, in which transactions (which Kafka calls "messages")
-are replicated from the leader node to the follower nodes. In the event the
-leader node goes down, one of the followers becomes the leader and ordering can
-continue, ensuring fault tolerance, just as with Raft.
+Kafka похожа на Raft тем, что использует ту же модель "лидер и подписчик", в которых
+транзакции (со стороны Kafka --- "сообщения") копируются подписчиками. Как и в Raft,
+когда лидер становится недоступным, один из подписчиков становится новым лидером.
 
-The management of the Kafka cluster, including the coordination of tasks,
-cluster membership, access control, and controller election, among others, is
-handled by a ZooKeeper ensemble and its related APIs.
+Ансамбль ZooKeeper управляет кластером Kafka, что включает в себя распределение задач между узлами, состав кластера, контроль доступа и т.д.
 
-Kafka clusters and ZooKeeper ensembles are notoriously tricky to set up, so our
-documentation assumes a working knowledge of Kafka and ZooKeeper. If you decide
-to use Kafka without having this expertise, you should complete, *at a minimum*,
-the first six steps of the [Kafka Quickstart guide](https://kafka.apache.org/quickstart) before experimenting with the
-Kafka-based ordering service. You can also consult
-[this sample configuration file](https://github.com/hyperledger/fabric/blob/release-1.1/bddtests/dc-orderer-kafka.yml)
-for a brief explanation of the sensible defaults for Kafka and ZooKeeper.
+Кластеры Kafka и ансамбли ZooKeeper довольно сложно настроить, поэтому если вы решите использовать Kafka без предварительных знаний о Kafka и ZooKeeper,
+вы как минимум должны ознакомиться с [Kafka Quickstart guide](https://kafka.apache.org/quickstart). 
+Также будет полезно ознакомиться со стандартными настройками Kafka и ZooKeeper в качестве
+ордеринг-службы: [пример конфигурации](https://github.com/hyperledger/fabric/blob/release-1.1/bddtests/dc-orderer-kafka.yml).
 
-To learn how to bring up a Kafka-based ordering service, check out [our documentation on Kafka](../kafka.html).
+[О том, как поднять Kafka ордеринг службу](../kafka.html).
 
 <!--- Licensed under Creative Commons Attribution 4.0 International License
 https://creativecommons.org/licenses/by/4.0/) -->
