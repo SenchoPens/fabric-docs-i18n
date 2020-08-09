@@ -47,10 +47,7 @@ ordering-службой, поскольку она должна знать те�
 
 ## Orderering-узлы и Identity
 
-Все, взаимодействующее с блокчейн-сетью, в том числе пиры, приложения, администраторы, ordering-службы, получает identity их организации из определения Membership Service Provider (MSP)
-Everything that interacts with a blockchain network, including peers,
-applications, admins, and orderers, acquires their organizational identity from
-their digital certificate and their Membership Service Provider (MSP) definition.
+Все, взаимодействующее с блокчейн-сетью, в том числе пиры, приложения, администраторы, ordering-службы, получает identity их организации из определения Membership Service Provider (MSP).
 
 Чтобы узнать больше про identities и MSP, ознакомьтесь с нашей документацией про [Identity](../identity/identity.html) и [Membership](../membership/membership.html).
 
@@ -160,91 +157,68 @@ L1 обновлен одинаково на обоих пирах P1 и P2, и �
 
 ## Реализации ordering-служб
 
-While every ordering service currently available handles transactions and
-configuration updates the same way, there are nevertheless several different
-implementations for achieving consensus on the strict ordering of transactions
-between ordering service nodes.
+Хотя все доступные ordering-службыы обрабатывают транзакции и обновления конфигураций одинаково, 
+существует несколько реализаций, достигающие консенсуса по строгому порядку транзакций между 
+узлами ordering-службы.
 
-For information about how to stand up an ordering node (regardless of the
-implementation the node will be used in), check out [our documentation on standing up an ordering node](../orderer_deploy.html).
+Как развернуть ordering-узел (вне зависимости от реализации) можно узнать в разделе 
+документации, [посвященном разворачиванию ordering-узла](../orderer_deploy.html).
 
-* **Raft** (recommended)
+* **Raft** (рекомендовано)
 
-  New as of v1.4.1, Raft is a crash fault tolerant (CFT) ordering service
-  based on an implementation of [Raft protocol](https://raft.github.io/raft.pdf)
-  in [`etcd`](https://coreos.com/etcd/). Raft follows a "leader and
-  follower" model, where a leader node is elected (per channel) and its decisions
-  are replicated by the followers. Raft ordering services should be easier to set
-  up and manage than Kafka-based ordering services, and their design allows
-  different organizations to contribute nodes to a distributed ordering service.
+  Принятый с v1.4.1, Raft является crash fault tolerant (CFT) (устойчивой с сбоям) ordering-
+  службой, основанной на реализации протокола [Raft](https://raft.github.io/raft.pdf) в 
+  [`etcd`](https://coreos.com/etcd/). Raft придерживается модели "лидер и последователь", где 
+  выбранный (в канале) лидер-пир принимает решения, которые повторяют последователи. Ordering-
+  службы Raft проще устанавливаются и управляются, чем ordering-службы Kafka, а их архитектура 
+  позволяет разным организациям предоставлять узлы в ordering-службу.
 
-* **Kafka** (deprecated in v2.x)
+* **Kafka** (прекращена поддержка в v2.x)
 
-  Similar to Raft-based ordering, Apache Kafka is a CFT implementation that uses
-  a "leader and follower" node configuration. Kafka utilizes a ZooKeeper
-  ensemble for management purposes. The Kafka based ordering service has been
-  available since Fabric v1.0, but many users may find the additional
-  administrative overhead of managing a Kafka cluster intimidating or undesirable.
+Также как ordering основанный на Raft, реализация Apache Kafka использует конфигурацию узлов 
+"лидер и последователь". Ordering-служба Kafka была доступна начиная с Fabric v1.0, однако 
+многие пользователи могут счесть сложности администрирования пугающими и нежелательными.
 
-* **Solo** (deprecated in v2.x)
+* **Solo** (прекращена поддержка в v2.x)
 
-  The Solo implementation of the ordering service is intended for test only and
-  consists only of a single ordering node.  It has been deprecated and may be
-  removed entirely in a future release.  Existing users of Solo should move to
-  a single node Raft network for equivalent function.
+Реализация Solo предназначена только для тестирования и состоит только из одного ordering-узла. 
+Она считается устаревшей и может быть удалена в будущих релизах. Пользователи Solo должны 
+сменить ее на единственный узел Raft для подобных функций.
 
 ## Raft
 
-For information on how to configure a Raft ordering service, check out our
-[documentation on configuring a Raft ordering service](../raft_configuration.html).
+Обратите внимание на [документацию о настройке ordering-службы Raft](../raft_configuration.html).
 
-The go-to ordering service choice for production networks, the Fabric
-implementation of the established Raft protocol uses a "leader and follower"
-model, in which a leader is dynamically elected among the ordering
-nodes in a channel (this collection of nodes is known as the "consenter set"),
-and that leader replicates messages to the follower nodes. Because the system
-can sustain the loss of nodes, including leader nodes, as long as there is a
-majority of ordering nodes (what's known as a "quorum") remaining, Raft is said
-to be "crash fault tolerant" (CFT). In other words, if there are three nodes in a
-channel, it can withstand the loss of one node (leaving two remaining). If you
-have five nodes in a channel, you can lose two nodes (leaving three
-remaining nodes).
+Для промышленных сетей следует выбирать реализацию Fabric протокола Raft. Он использует модель 
+"лидер и последователь", в которой лидер динамически избирается среди ordering-узлов канала 
+(набор этих узлов называют "consenter set"), и лидер посылает сообщения узлам последователям. 
+Поскольку система выдерживает потерю узлов, в том числе лидеров узлов, пока остается большинство 
+ordering-узлов (также известное как "кворум"), Raft остается "crash fault tolerant" (CFT). 
+Другими словами, если существует хотя бы три узла в канале, он может выдержать потерю одного из 
+них. Если в канале есть пять узлов, то он сможет выдержать потерю двух из них.
 
-From the perspective of the service they provide to a network or a channel, Raft
-and the existing Kafka-based ordering service (which we'll talk about later) are
-similar. They're both CFT ordering services using the leader and follower
-design. If you are an application developer, smart contract developer, or peer
-administrator, you will not notice a functional difference between an ordering
-service based on Raft versus Kafka. However, there are a few major differences worth
-considering, especially if you intend to manage an ordering service:
+С точки зрения сети и канала, существующие ordering-службы Raft и Kafka похожи. Ordering-службы 
+обеих используют архитектуру лидер и последователь. Разработчики же приложений и смарт-
+контрактов или администраторы пиров не заметят функционального различия ordering-служб Kafka и 
+Raft. Однако существует несколько ключевых отличий, особенно, если вы собираетесь управлять 
+ordering-службами:
 
-* Raft is easier to set up. Although Kafka has many admirers, even those
-admirers will (usually) admit that deploying a Kafka cluster and its ZooKeeper
-ensemble can be tricky, requiring a high level of expertise in Kafka
-infrastructure and settings. Additionally, there are many more components to
-manage with Kafka than with Raft, which means that there are more places where
-things can go wrong. And Kafka has its own versions, which must be coordinated
-with your orderers. **With Raft, everything is embedded into your ordering node**.
+* Raft проще установить. Хотя у Kafka есть много поклонников, даже они признают, что 
+развертывание кластера Kafka и его ансамбля ZooKeeper требует высокого уровня знаний о 
+инфраструктуре и настройках Kafka. Кроме того, в Kafka гораздо больше компонент для управления, 
+чем в Raft, из-за чего существует больше мест, где что-то может пойти не так. 
 
-* Kafka and Zookeeper are not designed to be run across large networks. While
-Kafka is CFT, it should be run in a tight group of hosts. This means that
-practically speaking you need to have one organization run the Kafka cluster.
-Given that, having ordering nodes run by different organizations when using Kafka
-(which Fabric supports) doesn't give you much in terms of decentralization because
-the nodes will all go to the same Kafka cluster which is under the control of a
-single organization. With Raft, each organization can have its own ordering
-nodes, participating in the ordering service, which leads to a more decentralized
-system.
+* Kafka и Zookeeper не спроектированы для больших сетей. CFT Kafka должен запускаться только в 
+узкой группе узлов. Это означает, что кластер Kafka должен быть размещен у одной организации. 
+Учитывая это, наличие ordering-узлов, управляемых различными организациями, при использовании 
+Kafka мешает децентрализации, потому что все узлы идут к одному и тому же кластеру Kafka, 
+который находится под контролем одной организации. В Raft у каждой организации может быть своя 
+ordering-служба, что делает систему более децентрализованной.
 
-* Raft is supported natively, which means that users are required to get the requisite images and
-learn how to use Kafka and ZooKeeper on their own. Likewise, support for
-Kafka-related issues is handled through [Apache](https://kafka.apache.org/), the
-open-source developer of Kafka, not Hyperledger Fabric. The Fabric Raft implementation,
-on the other hand, has been developed and will be supported within the Fabric
-developer community and its support apparatus.
+* Raft поддерживается напрямую Hyperledger Fabric, а в случае Kafka и ZooKeeper пользоватлю придется устанавливать и учиться их использовать самостоятельно.
 
-* В то время, как Kafka использует пул серверов (называемых "Kafka brokers") и администратор
-ордеринг-службы решает, сколько узлов он хочет использовать в конкретном канале, а Raft
+* В то время, как Kafka использует пул серверов (называемых "Kafka brokers"), а администратор
+ордеринг-службы решает, сколько узлов он хочет использовать в конкретном канале, Raft
 позволяет пользователям канала указать, какие ордеринг-узлы будут использоваться в канале.
 Таким образом, организациям не обязательно доверять администратору Kafka-узлов.
 
@@ -258,66 +232,49 @@ developer community and its support apparatus.
 другими понятиями: [записи журнала](../glossary#log-entry), [Consenter set](../glossary#consenter-set),
 [Кворум](../glossary#quorum), [Лидер](../glossary#leader), [Подписчик](../glossary#follower).
 
-### Raft in a transaction flow
+### Роль Raft в транзакционном потоке
 
-Every channel runs on a **separate** instance of the Raft protocol, which allows
-each instance to elect a different leader. This configuration also allows
-further decentralization of the service in use cases where clusters are made up
-of ordering nodes controlled by different organizations. While all Raft nodes
-must be part of the system channel, they do not necessarily have to be part of
-all application channels. Channel creators (and channel admins) have the ability
-to pick a subset of the available orderers and to add or remove ordering nodes
-as needed (as long as only a single node is added or removed at a time).
+Каждый канал имеет отдельную копию протокола Raft, что позволяет каждой копии выбирать своего 
+лидера. Такая конфигурация способствует децентрализации службы в сценариях использования, где кластеры 
+собраны из ordering-узлов, контролируемых разными организациями. Все узлы Raft должны быть 
+частью системного канала, однако они не обязательно должны быть частью всех каналов. Создатели 
+каналов (и их администраторы) могут выбирать набор свободных ordering-узлов и добавлять или 
+удалять ordering-узлы (по одному за раз).
 
-While this configuration creates more overhead in the form of redundant heartbeat
-messages and goroutines, it lays necessary groundwork for BFT.
+Хотя эта конфигурация создает накладные расходы в виде избыточных heartbeat-сообщений и горутин,
+она предоставляет необходимую для BFT базу.
 
-In Raft, transactions (in the form of proposals or configuration updates) are
-automatically routed by the ordering node that receives the transaction to the
-current leader of that channel. This means that peers and applications do not
-need to know who the leader node is at any particular time. Only the ordering
-nodes need to know.
+В Raft транзакции (в виде proposals или обновлений конфигурации) автоматически направляются 
+ordering-узлом текущему лидеру этого канала. Это означает, что пирам и приложениям не нужно 
+знать, кто является лидером в определенное время. Это нужно знать только ordering-узлам.
 
-When the orderer validation checks have been completed, the transactions are
-ordered, packaged into blocks, consented on, and distributed, as described in
-phase two of our transaction flow.
+Когда проверка ordering-службы завершена, транзакции упорядочены, упакованы в блоки, согласованы 
+и распространены в сеть, как описано на шаге два транзакционного потока.
 
-### Architectural notes
+### Несколько слов об архитектуре
 
-#### How leader election works in Raft
+#### Как в Raft работают выборы лидера
 
-Although the process of electing a leader happens within the orderer's internal
-processes, it's worth noting how the process works.
+Хотя избрание лидера является внутренним процессом ordering-службы, важно понимать, как они работают.
 
-Raft nodes are always in one of three states: follower, candidate, or leader.
-All nodes initially start out as a **follower**. In this state, they can accept
-log entries from a leader (if one has been elected), or cast votes for leader.
-If no log entries or heartbeats are received for a set amount of time (for
-example, five seconds), nodes self-promote to the **candidate** state. In the
-candidate state, nodes request votes from other nodes. If a candidate receives a
-quorum of votes, then it is promoted to a **leader**. The leader must accept new
-log entries and replicate them to the followers.
+Узлы в Raft находятся в одном из трех состояний: последователь, кандидат или лидер. Все узлы изначально являются **последователями**. В этом состоянии они могут заносить записи лидера в реестр или голосовать за лидера. Если за определеное время (например, пять секунд) узлы не получают heartbeat-сообщения или новой записи в реестр, то они выдвигают себя в качестве **кандидата**. В состоянии кандидата, узлы получают голоса других узлов. Если кандидат получает кворум голосов, то он становится **лидером**. Лидер должен принимать новые записи в реестр и посылать их последователям.
 
-For a visual representation of how the leader election process works, check out
-[The Secret Lives of Data](http://thesecretlivesofdata.com/raft/).
+Чтобы визуально представить, как работает процесс выборов, ознакомьтесь с [The Secret Lives of Data](http://thesecretlivesofdata.com/raft/).
 
-#### Snapshots
+#### Снапшот
 
-If an ordering node goes down, how does it get the logs it missed when it is
-restarted?
+Если ordering-узел падает, то как восстановить пропущенные им записи в журнал (лог) при перезапуске?
 
-While it's possible to keep all logs indefinitely, in order to save disk space,
-Raft uses a process called "snapshotting", in which users can define how many
-bytes of data will be kept in the log. This amount of data will conform to a
-certain number of blocks (which depends on the amount of data in the blocks.
-Note that only full blocks are stored in a snapshot).
+Хотя хранить все записи в реестр можно бесконечно, чтобы сохранить пространство на диске Raft 
+использует процесс, называемый "снапшотингом", в ходе которого пользователи могут определять, 
+сколько байт данных будет храниться в журнале (логе). Этот объем данных соответствует 
+определенному числу блоков (а это зависит от объема данных в блоке. Заметьте, что в снапшоте 
+хранятся только целые блоки).
 
-For example, let's say lagging replica `R1` was just reconnected to the network.
-Its latest block is `100`. Leader `L` is at block `196`, and is configured to
-snapshot at amount of data that in this case represents 20 blocks. `R1` would
-therefore receive block `180` from `L` and then make a `Deliver` request for
-blocks `101` to `180`. Blocks `180` to `196` would then be replicated to `R1`
-through the normal Raft protocol.
+Например, упавшая реплика `R1` была повторно подключена к сети. Номер ее последнего блока `100`.
+Лидер `L` сейчас на блоке `196`, и он настроен делать снапшот каждые 20 блоков. `R1` получит 
+блок `180` от `L` и пошлет запрос `Deliver` за блоками от `101` и до `180`. Блоки от `180` до 
+`196` будут переданы `R1` через обычный протокол Raft.
 
 ### Kafka
 
